@@ -1,0 +1,1 @@
+78557e6db006fbcb0546749d1140f9a1a41757f59d34da35e2e3bcf1efa7d516  ./target/wasm32-unknown-unknown/release/token_locker.wasm
