@@ -2,6 +2,20 @@
 
 cosmwasm/artifacts/
 
+# Build results
+cosmwasm/target/
+
+# Cargo+Git helper file (https://github.com/rust-lang/cargo/blob/0.44.1/src/cargo/sources/git/utils.rs#L320-L327)
+cosmwasm/.cargo-ok
+
+# Text file backups
+cosmwasm/**/*.rs.bk
+
+# IDEs
+*.iml
+.idea
+
+
 # dependencies
 node_modules/
 /.pnp
