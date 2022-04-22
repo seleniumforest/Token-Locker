@@ -1,0 +1,17 @@
+{ 
+    "lock" : {
+        "token": {
+            "amount": "10000",
+            "info": {
+                "Token": {  
+                    "contract_addr": "terra10pyejy66429refv3g35g2t7am0was7ya7kz2a4"
+                }
+            }
+        },
+        "release_checkpoints": [{
+            "claimed" : false,
+            "release_timestamp": 1650645570,
+            "tokens_count": "10000"
+        }]
+    }
+}

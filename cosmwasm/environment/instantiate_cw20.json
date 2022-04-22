@@ -1,0 +1,9 @@
+{
+    "decimals": 6,
+    "initial_balances": [ {
+        "address": "terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v",
+        "amount": "10000000"
+    } ],
+    "name": "Alpaca Token",
+    "symbol": "ALP"
+}

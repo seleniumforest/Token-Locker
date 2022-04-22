@@ -19,7 +19,6 @@ const App = () => {
     const isMetaMask = window?.ethereum?.isMetaMask;
 
     useEffect(() => {
-        debugger;
         if (externalDataSlice.externalDataLoaded || !isMetaMask)
             return;
 

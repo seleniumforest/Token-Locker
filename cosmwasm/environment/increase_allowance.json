@@ -1,0 +1,9 @@
+{
+    "increase_allowance": { 
+    "amount": "10000",
+    "spender": "terra13aktep558cx6lny74c8st5qwt0jj66zgr7yz93",
+    "expirtaion": {
+        "at_height": 5000
+    }
+    }
+}

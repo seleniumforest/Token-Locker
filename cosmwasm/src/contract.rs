@@ -2,8 +2,9 @@ use std::iter::FromIterator;
 
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Storage, to_binary, Uint256};
+use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult, Storage, to_binary, Uint256, CosmosMsg, WasmMsg, Uint128};
 use cw2::set_contract_version;
+use cw20::Cw20ExecuteMsg;
 use schemars::_serde_json::de::Read;
 use schemars::schema::NumberValidation;
 
@@ -38,7 +39,7 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Lock { release_checkpoints, token } => 
-            try_lock(deps, info, release_checkpoints, token),
+            try_lock(deps, _env, info, release_checkpoints, token),
         ExecuteMsg::ReleaseByVaultId { vault_id} => 
             try_release_vault(deps, vault_id),
         ExecuteMsg::ReleaseAllAvailable {} => 
@@ -49,6 +50,7 @@ pub fn execute(
 
 pub fn try_lock(
     deps: DepsMut, 
+    env: Env,
     info: MessageInfo,
     release_checkpoints: Vec<ReleaseCheckpoint>, 
     token: Asset
@@ -79,8 +81,39 @@ pub fn try_lock(
             }
         })?;
 
-    Ok(Response::new().add_attribute("method", "lock")
-                      .add_attribute("id", new_vault.clone().id.to_string()))
+    let mut response = Response::new()
+        .add_attribute("method", "lock")
+        .add_attribute("id", new_vault.clone().id.to_string());
+
+    match new_vault.asset.info {
+        AssetInfo::Token { contract_addr } => {
+            response = response.add_message(CosmosMsg::Wasm(WasmMsg::Execute {
+                contract_addr: contract_addr.to_string(),
+                funds: vec![],
+                msg: to_binary(&Cw20ExecuteMsg::TransferFrom {
+                    amount: new_vault.asset.amount,
+                    owner: info.sender.to_string(),
+                    recipient: env.contract.address.to_string(),
+                })?,
+            }));
+        },
+        AssetInfo::NativeToken { denom } => {
+            let deposit_amount: Uint128 = info
+                .funds
+                .iter()
+                .find(|x| x.denom == denom)
+                .map(|x| Uint128::from(x.amount))
+                .unwrap_or_else(Uint128::zero);
+
+            if (deposit_amount != new_vault.asset.amount){
+                return Err(ContractError::MyError {  });
+            }
+
+            response = response.add_attribute("lock deposit_amount", deposit_amount)
+        },
+    }
+
+    Ok(response)
 }
 
 pub fn try_release_vault (
@@ -155,7 +188,7 @@ mod tests {
                 info: AssetInfo::Token { 
                     contract_addr: Addr::unchecked("terra1x46rqay4d3cssq8gxxvqz8xt6nwlz4td20k38v") 
                 }, 
-                amount: Uint256::from(123123 as u32)
+                amount: Uint128::from(123123 as u32)
             } 
         };
         let _res1 = execute(deps.as_mut(), mock_env(), info.clone(), msg.clone()).unwrap();

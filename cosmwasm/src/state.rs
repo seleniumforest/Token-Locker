@@ -1,7 +1,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Uint256};
+use cosmwasm_std::{Addr, Uint256, Uint128};
 use cw_storage_plus::{Map};
 
 // #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -34,7 +34,7 @@ pub enum AssetInfo {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct Asset {
     pub info: AssetInfo,
-    pub amount: Uint256,
+    pub amount: Uint128,
 }
 
 pub const STATE: Map<&Addr, Vec<TokenVault>> = Map::new("locks");
