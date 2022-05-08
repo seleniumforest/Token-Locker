@@ -14,22 +14,20 @@ Or `truffle migrate --network ropsten`  to deploy scripts to ropsten
 
 Truffle compiles and copies artifacts at /public/contracts to access them from react-app
 
-## User Guide
+To deploy cosmwasm, see terra docs and cosmwasm/environment/commands.txt
 
-App deployed at http://142.93.233.33:3000
+# TODO 
+
+- [part done]Add token list
+- [wip]Create locks with linear and custom release schedule
+- [soon]Create integrations with compound/aave to get yield while tokens are locked
+- [soon]Add networks - bsc, avax etc
+- [part done]Separate app for different chains
+- [part done]Create CosmWasm contracts for cw-20 tokens
+
+## User Guide
 
 1. Switch network to Ropsten in Metamask
 2. Claim test ETH faucet from https://faucet.ropsten.be/ or https://faucet.metamask.io/ or https://faucet.dimensions.network/
 3. Swap ETH to any token on Uniswap (Ropsten)  
 4. Select token in app, enter amount (less than your balance) and choose FUTURE date to lock until. 
-
-# TODO 
-
-- Add token lists
-- Refactor and unify app design to future multichain solution 
-- Create locks with linear and custom release schedule
-- Create integrations with compound/aave to get yield while tokens are locked
-- Add networks - bsc, avax etc
-- Create CosmWasm contracts for cw-20 tokens
-- Create NEAR contracts
-- Create Solana contracts
