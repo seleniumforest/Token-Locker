@@ -18,12 +18,13 @@ To deploy cosmwasm, see terra docs and cosmwasm/environment/commands.txt
 
 # TODO 
 
-- [part done]Add token list
+- [part.done]Add token list
 - [wip]Create locks with linear and custom release schedule
 - [soon]Create integrations with compound/aave to get yield while tokens are locked
 - [soon]Add networks - bsc, avax etc
-- [part done]Separate app for different chains
-- [part done]Create CosmWasm contracts for cw-20 tokens
+- [part.done]Separate app for different chains
+- [part.done]Create CosmWasm contracts for cw-20 tokens
+- [maybe]write contract tests
 
 ## User Guide
 
