@@ -1,0 +1,115 @@
+:root {
+    --backgroundColor: rgba(246, 241, 209);
+    --colorShadeA: rgb(106, 163, 137);
+    --colorShadeB: rgb(121, 186, 156);
+    --colorShadeC: rgb(150, 232, 195);
+    --colorShadeD: rgb(187, 232, 211);
+    --colorShadeE: rgb(205, 255, 232);
+}
+html,
+body,
+#root {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+#root {
+    padding: 20px;
+}
+body {
+    font-family: "OpenSans", sans-serif;
+    background: var(--backgroundColor);
+    text-decoration: none;
+    font-size: 1rem;
+    color: var(--colorShadeA);
+    font-weight: 700;
+    text-transform: uppercase;
+
+    .tabs {
+        height: 10%;
+        margin-right: 10px;
+        .tabs-switcher {
+            display: flex;
+
+            button {
+                &:last-child {
+                    margin-left: auto;
+                }
+            }
+        }
+    }
+
+    .lock {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 90%;
+        .lock-blocks {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            .lock-label {
+                font-size: 1rem;
+                color: var(--colorShadeA);
+                font-weight: 700;
+                text-transform: uppercase;
+                font-family: inherit;
+
+                &.first-label, &.last-label {
+                    margin-top: auto;
+                }
+            }
+            .lock-block {
+                margin-bottom: 10px;
+                width: 350px;
+                height: 70px;
+                background-color: var(--colorShadeC);
+                border-radius: 1em;
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                padding: 5px;
+                border: 2px solid var(--colorShadeA);
+                
+                .red-rdt > input {
+                    border: 2px solid indianred;
+                }
+
+                &.user-locks {
+                    display: flex;
+                    flex-direction: column;
+                    height: auto;
+                    width: auto;
+
+                    .user-lock {
+                        width: 100%;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+
+                        .userlock-label {
+                            margin-right: 5px;
+                            margin-left: 5px;
+                        }
+
+                        .userlock-claim {
+                            margin: 5px;
+                        }
+                        & > {
+                            flex-direction: row;
+                        }
+                    }
+                }
+                input {
+                    display: flex;
+                }
+            }
+        }
+    }
+}
+
+@import "./Buttons.scss";
+@import "./Inputs.scss";
+@import "./BlockSpecificStyles.scss";

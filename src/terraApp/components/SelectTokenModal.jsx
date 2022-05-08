@@ -1,26 +1,25 @@
 import React, { useState } from 'react';
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
-import '../styles/Modal.scss'
+import '../../shared/styles/Modal.scss'
 import { useDispatch, useSelector } from 'react-redux';
 import { selectToken } from '../reduxSlices/tokenSelectorSlice';
-import { getWeb3 } from '../web3provider';
-import { getErc20Abi } from '../helpers';
+import { getTerraLcd } from '../web3provider';
+import { loadTokenByContractAddress } from '../helpers';
 
 const SelectTokenModal = () => {
     const { tokenSelectorSlice, externalDataSlice } = useSelector(state => state);
     const dispatch = useDispatch();
-    
+
     const [open, setOpen] = useState(false);
     const onOpenModal = () => setOpen(true);
     const onCloseModal = () => setOpen(false);
 
-
-    const fullTokenList = [ 
-        externalDataSlice.nativeCurrency, 
-        ...externalDataSlice.tokenList 
+    const fullTokenList = [
+        ...externalDataSlice.nativeCurrency,
+        ...externalDataSlice.tokenList
     ];
-    const [shownTokens, setShownTokens ] = useState(fullTokenList);
+    const [shownTokens, setShownTokens] = useState(fullTokenList);
 
     return (
         <>
@@ -38,43 +37,54 @@ const SelectTokenModal = () => {
                 <div>
                     <div>
                         Select Token
-                    </div> 
+                    </div>
                     <div className="find-token">
-                        <input className="big-input find-token-input" 
+                        <input className="big-input find-token-input"
                             placeholder="Find token or paste contract"
-                            onChange={async (event) => {                             
+                            onChange={async (event) => {
                                 let userInput = event.target.value.toLowerCase();
 
-                                if (userInput.length === 42 && 
-                                    userInput.toLowerCase().startsWith("0x")) {
-                                        let importedToken = await loadTokenByContractAddress(userInput);
-                                        setShownTokens([ importedToken ]);
-                                        return;
+                                //load token by address
+                                if (userInput.toLowerCase().startsWith("terra1")) {
+                                    let importedToken = await loadTokenByContractAddress(externalDataSlice.chainOpts, userInput);
+                                    setShownTokens([importedToken]);
+                                    return;
                                 }
 
-                                if (!userInput)
+                                //show all tokens
+                                if (!userInput){
                                     setShownTokens(fullTokenList);
-
+                                    return; 
+                                }
+                                
+                                //filter by user input
                                 let filtered = fullTokenList.filter(token => {
-                                    let ticker = token.ticker.toLowerCase();
-                                    let name = token.name.toLowerCase();
+                                    let ticker = token?.ticker?.toLowerCase();
+                                    let name = token?.name?.toLowerCase();
+
+                                    if (token.native)
+                                        return ticker.startsWith(userInput);
 
                                     return ticker.startsWith(userInput) ||
-                                           name.startsWith(userInput);
+                                        name.startsWith(userInput);
                                 });
-                                
+
                                 setShownTokens(filtered);
                             }}
                         />
                     </div>
                     <div className="tokenlist">
-                        {shownTokens.map(token => { 
-                            return (<div key={token.address || token.ticker} className="tokenlist-token">
+                        {shownTokens.map(token => {
+                            return (<div key={token.native ? 
+                                              token.ticker : 
+                                              token.address || token.ticker} className="tokenlist-token">
                                 <button className={"big-button"} onClick={async () => {
                                     dispatch(selectToken(token));
                                     onCloseModal();
                                 }}>
-                                    {`${token.name} (${token.ticker})`}
+                                    { token.native ? 
+                                        token.ticker : 
+                                        `${token.name} (${token.ticker})`}
                                 </button>
                             </div>);
                         })}
@@ -84,25 +94,5 @@ const SelectTokenModal = () => {
         </>
     )
 };
-
-const loadTokenByContractAddress = async (address) => {
-    let web3 = await getWeb3();
-    let abi = await getErc20Abi();
-
-    let contract = new web3.eth.Contract(abi, address);
-
-    let name = await contract.methods.name().call();
-    let totalSupply = await contract.methods.totalSupply().call();
-    let decimals = await contract.methods.decimals().call();
-    let ticker = await contract.methods.symbol().call();
-
-    return {
-        name,
-        totalSupply,
-        address,
-        decimals,
-        ticker
-    }
-}
 
 export default SelectTokenModal;

@@ -1,0 +1,15 @@
+{ 
+    "lock" : {
+        "token": {
+            "amount": "100000",
+            "NativeToken": {
+                "demon": "uluna"
+            }
+        },
+        "release_checkpoints": [{
+            "claimed" : false,
+            "release_timestamp": 1650645570,
+            "tokens_count": "10000"
+        }]
+    }
+}

@@ -12,7 +12,7 @@ use cw_storage_plus::{Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ReleaseCheckpoint {
-    pub tokens_count: Uint256,
+    pub tokens_count: Uint128,
     pub release_timestamp: i64,
     pub claimed: bool
 }

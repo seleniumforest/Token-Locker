@@ -13,5 +13,11 @@ pub enum ContractError {
     Unauthorized {},
 
     #[error("MyError")]
-    MyError {}
+    MyError {},
+
+    #[error("AlreadyClaimed")]
+    AlreadyClaimed {},
+
+    #[error("NotTimeForClaim")]
+    NotTimeForClaim {}
 }
