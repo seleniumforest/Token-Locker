@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import "../styles/App.scss";
+import "../../shared/styles/App.scss";
 import NetworkSelector from './NetworkSelector';
 import ApproveLockButton from './ApproveLockButton';
 import TokenSelector from './TokenSelector';

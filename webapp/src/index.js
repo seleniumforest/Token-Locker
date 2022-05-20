@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './ethereumApp/components/App.jsx';
-import TerraApp from './terraApp/components/TerraApp.jsx';
+import CosmApp from './cosmApp/components/CosmApp.jsx';
 import { Provider } from 'react-redux';
 import { store as ethStore } from './ethereumApp/store';
-import { store as terraStore } from './terraApp/store';
+import { store as cosmStore } from './cosmApp/store';
 
 import {
     BrowserRouter,
@@ -44,8 +44,8 @@ ReactDOM.render(
                 } />
                 <Route path="/terra" element={
                     <>
-                        <Provider store={terraStore}>
-                            <TerraApp />
+                        <Provider store={cosmStore}>
+                            <CosmApp />
                         </Provider>
                     </>
                 } />

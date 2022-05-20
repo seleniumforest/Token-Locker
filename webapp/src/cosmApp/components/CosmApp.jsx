@@ -10,7 +10,7 @@ import DateSelector from './DateSelector';
 import { fetchExternalData } from '../reduxSlices/externalDataSlice';
 import { WalletProvider } from '@terra-money/wallet-provider';
 
-const TerraApp = () => {
+const CosmApp = () => {
     const { externalDataSlice } = useSelector(state => state);
     const dispatch = useDispatch();
 
@@ -50,4 +50,4 @@ const TerraApp = () => {
     );
 }
 
-export default TerraApp;
+export default CosmApp;

@@ -1,5 +1,5 @@
 import React from 'react';
-import "../styles/Spinner.scss";
+import "../../shared/styles/Spinner.scss";
 
 const LoadingSpinner = () => (<div className="lds-ellipsis"><div></div><div></div><div></div><div></div></div>)
 
