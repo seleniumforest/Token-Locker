@@ -1,32 +1,23 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useWallet, WalletStatus } from '@terra-money/wallet-provider';
 import { shortAddress } from '../helpers';
 import { Router, useNavigate } from 'react-router-dom';
 import { setAddress } from '../reduxSlices/networkSlice';
+import { ENV, JUNO_LOCAL_KEPLR_CONFIG } from '../constants';
+
 
 function NetworkSelector() {
     const { networkSlice } = useSelector(state => state);
     const dispatch = useDispatch();
-
-    const {
-        status,
-        wallets,
-        connect,
-        disconnect,
-    } = useWallet();
     const navigate = useNavigate();
 
-    let addresses = wallets.map(x => x.terraAddress);
-    let connected = status === "WALLET_CONNECTED" && addresses.length !== 0;
-
     useEffect(() => {
-        if (networkSlice.userAddress)
-            return;
+        // if (networkSlice.userAddress)
+        //     return;
 
-        if (connected)
-            dispatch(setAddress({ userAddress: addresses[0] }));
-    }, [networkSlice.userAddress, connected, dispatch, setAddress])
+        // if (connected)
+        //     dispatch(setAddress({ userAddress: addresses[0] }));
+    }, [networkSlice.userAddress, dispatch, setAddress])
 
     return (
         <>
@@ -39,16 +30,22 @@ function NetworkSelector() {
                     </button>
                     <button
                         className='big-button'
-                        key={'connect-EXTENSION'}
-                        onClick={() => {
-                            if (connected) {
-                                disconnect();
-                                dispatch(setAddress({ userAddress: "" }))
-                            } else
-                                connect("EXTENSION");
+                        onClick={async () => {
+                            if (networkSlice.userAddress) {
+                                dispatch(setAddress( { userAddress: "" } ))
+                            }
+
+                            await window.keplr.experimentalSuggestChain(JUNO_LOCAL_KEPLR_CONFIG);
+
+                            await window.keplr.enable("testing");
+                            const offlineSigner = window.getOfflineSigner(ENV.chainId);
+                            const [firstAcc] = await offlineSigner.getAccounts();
+                        
+                            if (firstAcc)
+                                dispatch(setAddress({ userAddress: firstAcc.address }))
                         }}
                     >
-                        {networkSlice.userAddress ? shortAddress(networkSlice.userAddress, 7, 4) : "Connect Terra Station"}
+                        {networkSlice.userAddress ? shortAddress(networkSlice.userAddress, 7, 4) : "Connect Keplr"}
                     </button>
                 </div>
             </div>

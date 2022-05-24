@@ -1,6 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { getErc20Abi, getLockerContract, loadTokenByContractAddress } from '../helpers';
-import { getWeb3 } from '../web3provider';
+import { loadTokenByContractAddress } from '../helpers';
+import { CosmWasmClient, SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { GasPrice } from "@cosmjs/stargate";
+import { ENV } from '../constants';
+import Big from 'big.js';
 import { getUserLocks } from './userLocksSlice';
 
 const initialState = {
@@ -12,57 +15,88 @@ const initialState = {
     isApproveLockLoading: false
 };
 
-export const approveToken = createAsyncThunk(
-    'tokenSelector/approveToken',
-    async ({ tokenAddress, approveAmount }) => {
-        try {
-            // let web3 = await getWeb3();
-            // let locker = await getLockerContract();
-            // let tokenContract = new web3.eth.Contract(await getErc20Abi(), tokenAddress);
-
-            // await tokenContract
-            //     .methods
-            //     .approve(locker.address, approveAmount)
-            //     .send({ from: window.ethereum.selectedAddress });
-
-            // return approveAmount;
-        }
-        catch (e) { console.log(e) }
-    }
-);
-
+//todo refactor - make 2 thunks for tokens and native denoms and make smth with gas
+// move wallet initialization to helpers
 export const lockToken = createAsyncThunk(
     'tokenSelector/lockToken',
-    async ({ isNative, lockUntil, amount, tokenAddress, userAddress }, { dispatch }) => {
+    async ({ token, lockUntil, amount }, { getState, dispatch }) => {
         try {
-            // let web3 = await getWeb3();
-            // let locker = await getLockerContract();
-            // let lockerContract = new web3.eth.Contract(locker.abi, locker.address);
+            let lockAmount = new Big(amount).mul(Math.pow(10, token.decimals)).toString();
+            const chainId = ENV.chainId;
+            await window.keplr.enable(chainId);
+            const offlineSigner = window.getOfflineSigner(chainId);
+            const [firstAcc] = await offlineSigner.getAccounts();
 
-            // if (isNative) {
-            //     await lockerContract
-            //         .methods
-            //         .lockNativeCurrency(lockUntil.toString())
-            //         .send({
-            //             from: userAddress,
-            //             value: amount
-            //         })
-            // }
-            // else {
-            //     await lockerContract
-            //         .methods
-            //         .lock(lockUntil.toString(), tokenAddress, amount)
-            //         .send({ from: userAddress })
-            // }
-            // await dispatch(getUserLocks({ userAddress }))
-            // await dispatch(getSelectedTokenBalance({
-            //     tokenAddress,
-            //     userAddress,
-            //     isNativeCurrency: isNative
-            // }))
-            // await dispatch(clearAmount())
+            const getTokenInfo = () => {
+                return token.isNative ?
+                    { "NativeToken": { "denom": token.denom } } :
+                    { "Token": { "contract_addr": token.address } }
+            }
+
+            const executeMsg = {
+                "lock": {
+                    "token": {
+                        "amount": lockAmount,
+                        "info": getTokenInfo()
+                    },
+                    "release_checkpoints": [{
+                        "claimed": false,
+                        "release_timestamp": lockUntil,
+                        "tokens_count": lockAmount
+                    }]
+                }
+            };
+
+            let contractAllowance = {
+                "increase_allowance": {
+                    "amount": lockAmount,
+                    "spender": ENV.lockerContract
+                }
+            }
+
+            let allowanceMsg = {
+                typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
+                value: {
+                    sender: firstAcc.address,
+                    contract: token.address,
+                    msg: Buffer.from(JSON.stringify(contractAllowance))
+                }
+            };
+
+            let execMsg = {
+                typeUrl: "/cosmwasm.wasm.v1.MsgExecuteContract",
+                value: {
+                    sender: firstAcc.address,
+                    contract: ENV.lockerContract,
+                    msg: Buffer.from(JSON.stringify(executeMsg)),
+                    funds: token.isNative ? [{ denom: ENV.denom, amount: lockAmount }] : undefined
+                }
+            };
+
+            const client = await SigningCosmWasmClient.connectWithSigner(
+                ENV.rpc,
+                offlineSigner,
+                { gasPrice: GasPrice.fromString("0.1" + token.denom) }
+            )
+
+            let result = await client.signAndBroadcast(
+                firstAcc.address,
+                token.isNative ? [execMsg] : [allowanceMsg, execMsg],
+                "auto")
+
+            console.log(result)
         }
         catch (e) { console.log(e) }
+        
+        //post-thunk actions, update data
+        let state = getState();
+        let userAddress = state.networkSlice.userAddress;
+        dispatch(getUserLocks({ userAddress }));
+        dispatch(getSelectedTokenBalance({
+            tokenAddress: token.address,
+            userAddress: userAddress,
+            isNativeCurrency: token.isNative
+        }))
     }
 );
 
@@ -70,72 +104,34 @@ export const getSelectedTokenBalance = createAsyncThunk(
     'tokenSelector/getSelectedTokenBalance',
     async ({ tokenAddress, userAddress, isNativeCurrency }) => {
         try {
-            // let web3 = await getWeb3();
+            const signer = await CosmWasmClient.connect(ENV.rpc);
+            if (isNativeCurrency) {
+                let balance = await signer.getBalance(userAddress, ENV.denom);
+                return balance.amount;
 
-            // if (isNativeCurrency) {
-            //     let balance = await web3.eth.getBalance(userAddress);
-            //     return balance.toString();
-            // }
-            // else {
-            //     let tokenContract = new web3.eth.Contract(await getErc20Abi(), tokenAddress);
-            //     let balance = await tokenContract.methods.balanceOf(userAddress).call();
-            //     return balance;
-            // }
+            } else {
+                let result = await signer.queryContractSmart(
+                    tokenAddress,
+                    {
+                        balance: { address: userAddress }
+                    })
+                return result.balance;
+            }
         }
         catch (e) { console.log(e) }
     }
 );
 
-export const getSelectedTokenApproval = createAsyncThunk(
-    'tokenSelector/getSelectedTokenApproval',
-    async ({ spenderAddress, userAddress, selectedTokenAddress }) => {
-        try {
-            // let web3 = await getWeb3();
-            // let selectedTokenContract = new web3.eth.Contract(await getErc20Abi(), selectedTokenAddress);
-
-            // let allowance = await selectedTokenContract
-            //     .methods
-            //     .allowance(userAddress, spenderAddress)
-            //     .call();
-
-            // return allowance.toString();
-        }
-        catch (e) { console.log(e) }
-    }
-);
-
-export const clearApproval = createAsyncThunk(
-    'tokenSelector/approveToken',
-    async (_, thunkApi) => {
-        try {
-            // let state = thunkApi.getState();
-
-            // let web3 = await getWeb3();
-            // let locker = await getLockerContract();
-            // let tokenContract = new web3.eth.Contract(await getErc20Abi(), state.tokenSelectorSlice.selectedToken.address);
-            // let totalSupply = state.tokenSelectorSlice.selectedToken.totalSupply;
-
-            // await tokenContract
-            //     .methods
-            //     .approve(locker.address, "0")
-            //     .send({ from: window.ethereum.selectedAddress });
-
-            // return totalSupply;
-        }
-        catch (e) { console.log(e) }
-    }
-);
-
+//todo need refactor. there is no token selection, there's a fetching of total supply
 export const selectToken = createAsyncThunk(
     "tokenSelector/selectToken",
-    async (token, thunkApi) => {
-        if (token.native || token.totalSupply) {
+    async (token) => {
+        if (token.isNative || token.totalSupply) {
             return token;
         }
 
         try {
-            let state = thunkApi.getState();
-            let loadedToken = loadTokenByContractAddress(state.externalDataSlice.chainOpts, token.address);
+            let loadedToken = await loadTokenByContractAddress(token.address);
 
             return {
                 ...token,
@@ -164,19 +160,6 @@ export const tokenSelectorSlice = createSlice({
         builder
             .addCase(getSelectedTokenBalance.fulfilled, (state, action) => {
                 state.balance = action.payload
-            })
-            .addCase(getSelectedTokenApproval.fulfilled, (state, action) => {
-                state.approvedAmount = action.payload
-            })
-            .addCase(approveToken.fulfilled, (state, action) => {
-                state.approvedAmount = action.payload;
-                state.isApproveLockLoading = false;
-            })
-            .addCase(approveToken.rejected, (state) => {
-                state.isApproveLockLoading = false;
-            })
-            .addCase(approveToken.pending, (state) => {
-                state.isApproveLockLoading = true;
             })
             .addCase(lockToken.fulfilled, (state, action) => {
                 state.isApproveLockLoading = false;

@@ -12,6 +12,7 @@ const mnemonic = "clip hire initial neck maid actor venue " +
     "waste crater broccoli pipe steak sister " +
     "coyote moment obvious choose";
 
+//npx ts-node locker-instantiate.ts 1
 const main = async () => {
     const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
         mnemonic,

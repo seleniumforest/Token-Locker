@@ -11,6 +11,8 @@ cosmwasm/.cargo-ok
 # Text file backups
 cosmwasm/**/*.rs.bk
 
+webapp/build
+
 # IDEs
 *.iml
 .idea

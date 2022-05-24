@@ -1,13 +1,14 @@
 import moment from "moment";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { pollTx, shortAddress } from "../helpers";
-import { getUserLocks } from "../reduxSlices/userLocksSlice";
+import { shortAddress } from "../helpers";
+import { claimByVaultId, getUserLocks } from "../reduxSlices/userLocksSlice";
 import LoadingSpinner from "./LoadingSpinner";
 import Big from 'big.js';
-import { LOCKER_CONTRACT, TERRA_NATIVECURRENCY } from "../constants";
-import { Fee, MsgExecuteContract } from "@terra-money/terra.js";
-import { useConnectedWallet } from "@terra-money/wallet-provider";
+import { ENV } from "../constants";
+import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
+import { getSelectedTokenBalance } from "../reduxSlices/tokenSelectorSlice";
+import { GasPrice } from "@cosmjs/stargate";
 
 const UserLocks = () => {
     const { userLocksSlice, networkSlice } = useSelector(state => state);
@@ -20,7 +21,7 @@ const UserLocks = () => {
         dispatch(getUserLocks({ userAddress: networkSlice.userAddress }));
     }, [networkSlice.userAddress, dispatch])
 
-    let vaultsExist = userLocksSlice.userLocks?.locks?.length > 0;
+    let vaultsExist = userLocksSlice.userLocks?.length > 0;
 
     if (!vaultsExist || !networkSlice.userAddress)
         return (<span className="lock-label last-label"></span>)
@@ -29,18 +30,18 @@ const UserLocks = () => {
         <>
             <span className="lock-label last-label">Your locks</span>
             <div className="lock-block user-locks">
-                {userLocksSlice.userLocks.locks.map((x, index) =>
+                {userLocksSlice.userLocks.map((x, index) =>
                     (<UserLock key={index} lock={x} index={x.id} />))}
             </div>
         </>
     )
 }
 
-const UserLock = ({ lock, index, connectedWallet }) => {
+const UserLock = ({ lock, index }) => {
     const dispatch = useDispatch();
-    const { externalDataSlice, networkSlice } = useSelector(state => state);
-    const wallet = useConnectedWallet();
+    const { externalDataSlice, networkSlice, tokenSelectorSlice } = useSelector(state => state);
 
+    let token = tokenSelectorSlice.selectedToken;
     let checkpoint = lock.release_checkpoints[0];
     let vaultReleased = checkpoint.release_timestamp <= moment().unix();
     let amountToClaim = Big(checkpoint.tokens_count).div(Math.pow(10, 6));
@@ -52,27 +53,8 @@ const UserLock = ({ lock, index, connectedWallet }) => {
     let claimButton = (
         <button
             className={btnclass}
-            onClick={async () => {
-                if (!availableToClaim)
-                    return;
-
-                let claimMsg = {
-                    "release_by_vault_id": {
-                        "vault_id": index
-                    }
-                }
-
-                const transactionMsg = {
-                    fee: new Fee(2000000, '200000uluna'),
-                    msgs: [new MsgExecuteContract(wallet.walletAddress,
-                        LOCKER_CONTRACT,
-                        claimMsg)]
-                };
-
-                let tx = await wallet.post(transactionMsg);
-                console.log("https://finder.terra.money/localterra/tx/" + tx.result.txhash);
-                await pollTx(tx.result.txhash);
-                dispatch(getUserLocks({ userAddress: networkSlice.userAddress }));
+            onClick={() => {
+                dispatch(claimByVaultId({ vaultId: index }));
             }}
         >
             {claimed ? "Claimed" : "Claim"}
@@ -80,7 +62,7 @@ const UserLock = ({ lock, index, connectedWallet }) => {
     );
 
     let tokenTicker = !!lock.asset.info.NativeToken ?
-        TERRA_NATIVECURRENCY.find(x => x.denom === lock.asset.info.NativeToken.denom).ticker :
+        ENV.ticker :
         getTokenTickerByAddress(externalDataSlice.tokenList, lock.asset.info.Token.contract_addr);
     let label = `${amountToClaim} ${lock.nativeCurrency ? externalDataSlice.nativeCurrency.ticker : tokenTicker} - until ${untilDate}`;
 

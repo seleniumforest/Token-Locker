@@ -4,7 +4,6 @@ import 'react-responsive-modal/styles.css';
 import '../../shared/styles/Modal.scss'
 import { useDispatch, useSelector } from 'react-redux';
 import { selectToken } from '../reduxSlices/tokenSelectorSlice';
-import { getTerraLcd } from '../web3provider';
 import { loadTokenByContractAddress } from '../helpers';
 
 const SelectTokenModal = () => {
@@ -16,7 +15,7 @@ const SelectTokenModal = () => {
     const onCloseModal = () => setOpen(false);
 
     const fullTokenList = [
-        ...externalDataSlice.nativeCurrency,
+        externalDataSlice.nativeCurrency,
         ...externalDataSlice.tokenList
     ];
     const [shownTokens, setShownTokens] = useState(fullTokenList);
@@ -45,8 +44,8 @@ const SelectTokenModal = () => {
                                 let userInput = event.target.value.toLowerCase();
 
                                 //load token by address
-                                if (userInput.toLowerCase().startsWith("terra1")) {
-                                    let importedToken = await loadTokenByContractAddress(externalDataSlice.chainOpts, userInput);
+                                if (userInput.toLowerCase().startsWith("juno1")) {
+                                    let importedToken = await loadTokenByContractAddress(userInput);
                                     setShownTokens([importedToken]);
                                     return;
                                 }
@@ -62,7 +61,7 @@ const SelectTokenModal = () => {
                                     let ticker = token?.ticker?.toLowerCase();
                                     let name = token?.name?.toLowerCase();
 
-                                    if (token.native)
+                                    if (token.isNative)
                                         return ticker.startsWith(userInput);
 
                                     return ticker.startsWith(userInput) ||
@@ -75,14 +74,14 @@ const SelectTokenModal = () => {
                     </div>
                     <div className="tokenlist">
                         {shownTokens.map(token => {
-                            return (<div key={token.native ? 
+                            return (<div key={token.isNative ? 
                                               token.ticker : 
                                               token.address || token.ticker} className="tokenlist-token">
                                 <button className={"big-button"} onClick={async () => {
                                     dispatch(selectToken(token));
                                     onCloseModal();
                                 }}>
-                                    { token.native ? 
+                                    { token.isNative ? 
                                         token.ticker : 
                                         `${token.name} (${token.ticker})`}
                                 </button>

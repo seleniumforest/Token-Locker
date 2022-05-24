@@ -10,7 +10,6 @@ import {
     BrowserRouter,
     Routes,
     Route,
-    Link,
     useNavigate
 } from "react-router-dom";
 
@@ -20,8 +19,8 @@ const SelectNetwork = () => {
     return (
         <>
             <h3>Select Network</h3>
-            <button className='big-button animated' onClick={() => navigate("/terra")} >
-                Terra
+            <button className='big-button animated' onClick={() => navigate("/juno")} >
+                Juno
             </button>
             <button className='big-button animated' onClick={() => navigate("/eth")} >
                 Ethereum
@@ -42,7 +41,7 @@ ReactDOM.render(
                         </Provider>
                     </>
                 } />
-                <Route path="/terra" element={
+                <Route path="/juno" element={
                     <>
                         <Provider store={cosmStore}>
                             <CosmApp />

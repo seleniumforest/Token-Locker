@@ -1,28 +1,68 @@
-export const chains = [
-    {
-        name: "eth",
-        nativeCurrency: ["ETH"]
+export const JUNO_MAINNET = "juno-1";
+export const JUNO_TESTNET = "uni-2";
+export const JUNO_LOCAL = "testing";
+
+const LOCAL_ENV = {
+    rpc: "http://localhost:26657",
+    rest: "http://localhost:1317",
+    chainId: JUNO_LOCAL,
+    ticker: "Juno",
+    denom: "ujunox",
+    decimals: 6,
+    lockerContract: "juno1xr3rq8yvd7qplsw5yx90ftsr2zdhg4e9z60h5duusgxpv72hud3skqksyr",
+    testToken: {
+        name: "Alpaca", 
+        ticker: "ALP",
+        address: "juno14hj2tavq8fpesdwxxcu44rty3hh90vhujrvcmstl4zr3txmfvw9skjuwg8",
+        decimals: 6,
+        isNative: false
+    }
+}
+
+export const ENV = LOCAL_ENV;
+
+export const JUNO_LOCAL_KEPLR_CONFIG = {
+    chainId: "testing",
+    chainName: "Juno local",
+    rpc: "http://localhost:26657",
+    rest: "http://localhost:1317",
+    bip44: {
+        coinType: 118,
     },
-    {
-        name: "bsc",
-        nativeCurrency: ["BNB"]
+    bech32Config: {
+        bech32PrefixAccAddr: "juno",
+        bech32PrefixAccPub: "juno" + "pub",
+        bech32PrefixValAddr: "juno" + "valoper",
+        bech32PrefixValPub: "juno" + "valoperpub",
+        bech32PrefixConsAddr: "juno" + "valcons",
+        bech32PrefixConsPub: "juno" + "valconspub",
     },
-    {
-        name: "terra",
-        nativeCurrency: ["LUNA", "UST", "KRT"]
-    }];
-
-export const ETH_MAINNET = 1;
-export const ETH_ROPSTEN = 3;
-export const ETH_GANACHE = 1337;
-export const ETH_BSC = 56;
-
-export const TERRA_MAINNET = "columbus-5";
-export const TERRA_TESTNET = "bombay-12";
-export const TERRA_LOCAL = "localterra";
-export const TERRA_NATIVECURRENCY = [
-    { ticker: "LUNA", denom: "uluna" }, 
-    { ticker: "UST", denom: "uusd" }, 
-    { ticker: "KRT", denom: "ukrw" }];
-
-export const LOCKER_CONTRACT = "terra1zw0kfxrxgrs5l087mjm79hcmj3y8z6tljuhpmc"//"terra13aktep558cx6lny74c8st5qwt0jj66zgr7yz93";
+    currencies: [
+        {
+            coinDenom: "JUNO",
+            coinMinimalDenom: "ujunox",
+            coinDecimals: 6,
+            coinGeckoId: "juno",
+        },
+    ],
+    feeCurrencies: [
+        {
+            coinDenom: "JUNO",
+            coinMinimalDenom: "ujunox",
+            coinDecimals: 6,
+            coinGeckoId: "juno",
+        },
+    ],
+    stakeCurrency: {
+        coinDenom: "UJUNO",
+        coinMinimalDenom: "ujunox",
+        coinDecimals: 6,
+        coinGeckoId: "juno",
+    },
+    coinType: 118,
+    gasPriceStep: {
+        low: 0.01,
+        average: 0.025,
+        high: 0.03,
+    },
+};
