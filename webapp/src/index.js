@@ -45,7 +45,7 @@ ReactDOM.render(
                     <>
                         <Provider store={cosmStore}>
                             <CosmApp />
-                        </Provider>
+                        </Provider> 
                     </>
                 } />
             </Routes>

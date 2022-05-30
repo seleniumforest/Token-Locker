@@ -2,7 +2,7 @@ use cosmwasm_std::Addr;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::state::{Asset, ReleaseCheckpoint, TokenVault};
+use crate::state::{ ReleaseCheckpoint, TokenVault, AssetInfo};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct InstantiateMsg { }
@@ -10,9 +10,8 @@ pub struct InstantiateMsg { }
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExecuteMsg {
-    Lock { release_checkpoints: Vec<ReleaseCheckpoint>, token: Asset },
-    ReleaseByVaultId { vault_id: i32 },
-    ReleaseAllAvailable {  },
+    Lock { release_checkpoints: Vec<ReleaseCheckpoint>, asset_info: AssetInfo },
+    ReleaseByVaultId { vault_id: i32, checkpoint_ids: Vec<i32> }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

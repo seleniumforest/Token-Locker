@@ -3,7 +3,7 @@ const mnemonic = require("./private.json").mnemonic;
 const endpoints = require("./private.json").endpoints;
 
 module.exports = {
-    contracts_build_directory: "../public/contracts",
+    contracts_build_directory: "../webapp/public",
     networks: {
         dev: {
             host: "127.0.0.1",

@@ -1,17 +1,12 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Uint256, Uint128};
+use cosmwasm_std::{Addr, Uint128};
 use cw_storage_plus::{Map};
-
-// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-// pub struct State {
-//     pub count: i32,
-//     pub owner: Addr,
-// }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct ReleaseCheckpoint {
+    pub id: i32,
     pub tokens_count: Uint128,
     pub release_timestamp: i64,
     pub claimed: bool
@@ -19,7 +14,7 @@ pub struct ReleaseCheckpoint {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct TokenVault {
-    pub asset: Asset,
+    pub asset_info: AssetInfo,
     pub id: i32,
     pub release_checkpoints: Vec<ReleaseCheckpoint>
 }
@@ -29,12 +24,6 @@ pub struct TokenVault {
 pub enum AssetInfo {
     Token { contract_addr: Addr },
     NativeToken { denom: String },
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Asset {
-    pub info: AssetInfo,
-    pub amount: Uint128,
 }
 
 pub const STATE: Map<&Addr, Vec<TokenVault>> = Map::new("locks");

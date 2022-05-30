@@ -73,7 +73,7 @@ const main = async () => {
     return log[0]
         .events
         .find(x => x.type === "wasm")?.attributes
-        .find(x => x.key === "lock deposit_amount")?.value;
+        .find(x => x.key === "deposit_successful")?.value;
 }
 
 main().then(console.log);
