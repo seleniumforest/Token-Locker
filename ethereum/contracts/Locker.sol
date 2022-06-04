@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
-
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity ^0.8.1;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract Locker {
-    using SafeMath for uint256;
+    event VaultCreated(
+        address tokenContract,
+        ReleaseCheckpoint[] releaseCheckpoints,
+        uint256 index
+    );
+    event VaultClaimed(uint256 index);
 
     struct ReleaseCheckpoint {
+        uint256 id;
         uint256 tokensCount;
         uint256 releaseTargetTimestamp;
         bool claimed;
@@ -26,128 +30,141 @@ contract Locker {
     }
 
     //every user has multiple vaults: he can store any token with different release schedules.
-    //Token might be duplicated, e.g. 
+    //Token might be duplicated, e.g.
     //Vault1: USDC with 6 months lock + Vault2: USDC with 12 months lock + Vault3: DAI with custom schedule
     mapping(address => UserLocks) userLocks;
 
-    function lock(
-        uint256 targetTimestamp,
+    function lockERC20(
         address tokenContract,
-        uint256 tokenCount
+        ReleaseCheckpoint[] memory releaseCheckpoints
     ) public returns (uint256) {
-        require(targetTimestamp > block.timestamp, "Date in the past selected");
-        require(tokenCount > 0, "Token count must be positive number");
         require(tokenContract != address(0), "Token contract is null");
-
         //push new element to user's vault and get it's index
         userLocks[msg.sender].userVaults.push();
         uint256 vaultIndex = userLocks[msg.sender].userVaults.length - 1;
-
-        //create release checkpoint to created vault
-        userLocks[msg.sender].userVaults[vaultIndex].checkpoints.push();
 
         //get created user Vault by index
         VestedTokenVault storage targetVault = userLocks[msg.sender].userVaults[
             vaultIndex
         ];
-
-        //get checkpoint, in this this case here will be only one element
-        ReleaseCheckpoint storage checkpoint = targetVault.checkpoints[0];
-
         //fill input data
         targetVault.tokenAddress = tokenContract;
         targetVault.nativeToken = false;
-        checkpoint.tokensCount = tokenCount;
-        checkpoint.releaseTargetTimestamp = targetTimestamp;
-        checkpoint.claimed = false;
 
-        //transfer token to vault
-        try
-            IERC20(tokenContract).transferFrom(
-                msg.sender,
-                address(this),
-                tokenCount
-            )
-        returns (bool) {
-            return vaultIndex;
-        } catch (bytes memory) {
-            revert("Not an ERC20 token");
+        uint256 totalTransfer = 0;
+        for (uint256 i; i < releaseCheckpoints.length; i++) {
+            require(
+                releaseCheckpoints[i].releaseTargetTimestamp > block.timestamp,
+                "Date in the past selected"
+            );
+            require(
+                releaseCheckpoints[i].tokensCount > 0,
+                "Token count must be positive number"
+            );
+
+            targetVault.checkpoints.push(
+                ReleaseCheckpoint({
+                    id: i,
+                    tokensCount: releaseCheckpoints[i].tokensCount,
+                    releaseTargetTimestamp: releaseCheckpoints[i]
+                        .releaseTargetTimestamp,
+                    claimed: false
+                })
+            );
+            totalTransfer += releaseCheckpoints[i].tokensCount;
         }
+
+        IERC20(tokenContract).transferFrom(
+            msg.sender,
+            address(this),
+            totalTransfer
+        );
+        emit VaultCreated(tokenContract, releaseCheckpoints, vaultIndex);
+        return vaultIndex;
     }
 
-    function lockNativeCurrency(uint256 targetTimestamp) public payable {
-        require(targetTimestamp > block.timestamp, "Date in the past selected");
+    function lockNativeCurrency(ReleaseCheckpoint[] memory cps)
+        public
+        payable
+        returns (uint256)
+    {
+        uint256 amountSent = 0;
+        for (uint256 i = 0; i < cps.length; i++) {
+            ReleaseCheckpoint memory cp = cps[i];
+            require(
+                cp.releaseTargetTimestamp > block.timestamp,
+                "Date in the past selected"
+            );
+            require(cp.tokensCount > 0, "Empty checkpoint");
+
+            amountSent += cp.tokensCount;
+        }
+
+        require(
+            amountSent == msg.value,
+            "Amount sent does not match for locks value"
+        );
 
         //push new element to user's vault and get it's index
         userLocks[msg.sender].userVaults.push();
         uint256 vaultIndex = userLocks[msg.sender].userVaults.length - 1;
-
-        //create release checkpoint to created vault
-        userLocks[msg.sender].userVaults[vaultIndex].checkpoints.push();
 
         //get created user Vault by index
         VestedTokenVault storage targetVault = userLocks[msg.sender].userVaults[
             vaultIndex
         ];
 
-        //get checkpoint, in this this case here will be only one element
-        ReleaseCheckpoint storage checkpoint = targetVault.checkpoints[0];
-
+        //userLocks[msg.sender].userVaults[vaultIndex].checkpoints = new ReleaseCheckpoint[](cps.length);
         targetVault.nativeToken = true;
-        checkpoint.tokensCount = msg.value;
-        checkpoint.releaseTargetTimestamp = targetTimestamp;
-        checkpoint.claimed = false;
+
+        for (uint256 i = 0; i < cps.length; i++) {
+            ReleaseCheckpoint memory cp1 = ReleaseCheckpoint({
+                id: i,
+                tokensCount: cps[i].tokensCount,
+                releaseTargetTimestamp: cps[i].releaseTargetTimestamp,
+                claimed: false
+            });
+
+            targetVault.checkpoints.push(cp1);
+        }
+
+        emit VaultCreated(address(0), cps, vaultIndex);
+        return vaultIndex;
     }
 
-    // function lockWithLinearRelease(
-    //     uint256 targetBlockRelease,
-    //     address tokenContract,
-    //     uint256 tokenCount,
-    //     int16 checkpoints
-    // ) public {}
-
-    // function lockWithScheduledRelease(
-    //     address tokenContract,
-    //     bytes32[] memory checkpoints
-    // ) public {}
-
-    // function claimAll() public {}
-
-    // function claimToken(address token) public {}
-
-    function claimByVaultId(uint256 vaultId) public payable returns (bool) {
+    function claimByVaultId(uint256 vaultId, uint256[] calldata checkpoints)
+        public
+        payable
+        returns (bool)
+    {
         require(vaultId >= 0, "vaultId should be positive");
 
         VestedTokenVault storage vault = userLocks[msg.sender].userVaults[
             vaultId
         ];
-        ReleaseCheckpoint storage checkpoint = vault.checkpoints[0];
 
-        require(checkpoint.claimed == false, "Already claimed");
-        require(
-            checkpoint.releaseTargetTimestamp <= block.timestamp,
-            "Cannot claim before target date"
-        );
+        uint256 amountSent = 0;
+        for (uint256 i = 0; i < checkpoints.length; i++) {
+            uint256 cpid = checkpoints[i];
+            ReleaseCheckpoint storage cp = vault.checkpoints[cpid];
+            require(cp.claimed == false, "Already claimed");
+            require(
+                cp.releaseTargetTimestamp <= block.timestamp,
+                "Cannot claim before target date"
+            );
+
+            amountSent += cp.tokensCount;
+            cp.claimed = true;
+        }
 
         if (vault.nativeToken) {
-            payable(msg.sender).transfer(
-                vault.checkpoints[0].tokensCount
-            );
-            checkpoint.claimed = true;
-            return true;
+            payable(msg.sender).transfer(amountSent);
         } else {
-            try
-                IERC20(vault.tokenAddress).transfer(
-                    msg.sender,
-                    checkpoint.tokensCount
-                )
-            returns (bool) {
-                checkpoint.claimed = true;
-                return true;
-            } catch (bytes memory) {
-                revert("Transfer error");
-            }
+            IERC20(vault.tokenAddress).transfer(msg.sender, amountSent);
         }
+
+        emit VaultClaimed(vaultId);
+        return true;
     }
 
     function getUserVaults(address userAddress)

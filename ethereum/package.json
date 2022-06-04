@@ -10,6 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.2",
-    "@truffle/hdwallet-provider": "^1.4.1"
+    "@truffle/hdwallet-provider": "^1.4.1",
+    "moment": "^2.29.3",
+    "truffle": "^5.5.17",
+    "truffle-core": "^5.0.34"
   }
 }

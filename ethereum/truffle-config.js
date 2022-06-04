@@ -3,12 +3,15 @@ const mnemonic = require("./private.json").mnemonic;
 const endpoints = require("./private.json").endpoints;
 
 module.exports = {
-    contracts_build_directory: "../webapp/public",
+    //contracts_build_directory: "../webapp/public",
     networks: {
         dev: {
             host: "127.0.0.1",
             port: 7545,
-            network_id: "*"
+            network_id: "*",
+            provider: function () {
+                return new HDWalletProvider(mnemonic, "http://0.0.0.0:7545")
+            }
         },
         dev2: {
             host: "127.0.0.1",
