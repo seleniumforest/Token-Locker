@@ -1,6 +1,6 @@
 # Token Locker MVP
 
-Tool to lock you tokens for given period.
+Tool to lock your tokens for a given period.
 
 ## Run this project
 
@@ -18,13 +18,16 @@ To deploy cosmwasm, see terra docs and cosmwasm/environment/commands.txt
 
 # TODO 
 
-- [part.done]Add token list
-- [wip]Create locks with linear and custom release schedule
-- [soon]Create integrations with compound/aave to get yield while tokens are locked
-- [soon]Add networks - bsc, avax etc
-- [part.done]Separate app for different chains
-- [part.done]Create CosmWasm contracts for cw-20 tokens
-- [maybe]write contract tests
+-[done] ethereum contracts
+-[done] ethereum contracts tests
+-[part.done] ethereum webapp
+-[part.done] token lists for eth blockchain
+-[wip] feature: allow user to create vested vaults for another user
+-[wip] deploy to ropsten
+-[wip] cosmwasm contracts
+-[wip] juno webapp
+-[soon] create locks with by-block release
+-[research] integrations with compound/aave to get yield while tokens are locked
 
 ## User Guide
 
