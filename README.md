@@ -18,16 +18,16 @@ To deploy cosmwasm, see terra docs and cosmwasm/environment/commands.txt
 
 # TODO 
 
--[done] ethereum contracts
--[done] ethereum contracts tests
--[part.done] ethereum webapp
--[part.done] token lists for eth blockchain
--[wip] feature: allow user to create vested vaults for another user
--[wip] deploy to ropsten
--[wip] cosmwasm contracts
--[wip] juno webapp
--[soon] create locks with by-block release
--[research] integrations with compound/aave to get yield while tokens are locked
+- [done] ethereum contracts
+- [done] ethereum contracts tests
+- [part.done] ethereum webapp
+- [part.done] token lists for eth blockchain
+- [wip] feature: allow user to create vested vaults for another user
+- [wip] deploy to ropsten
+- [wip] cosmwasm contracts
+- [wip] juno webapp
+- [soon] create locks with by-block release
+- [research] integrations with compound/aave to get yield while tokens are locked
 
 ## User Guide
 
