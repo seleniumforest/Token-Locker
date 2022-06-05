@@ -12,6 +12,8 @@ cosmwasm/.cargo-ok
 cosmwasm/**/*.rs.bk
 
 webapp/build
+webapp/public/contracts
+ethereum/build
 
 # IDEs
 *.iml

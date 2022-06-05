@@ -4,8 +4,7 @@ import 'react-responsive-modal/styles.css';
 import '../../shared/styles/Modal.scss'
 import { useDispatch, useSelector } from 'react-redux';
 import { selectToken } from '../reduxSlices/tokenSelectorSlice';
-import { getWeb3 } from '../web3provider';
-import { getErc20Abi } from '../helpers';
+import { loadTokenByContractAddress } from '../helpers';
 
 const SelectTokenModal = () => {
     const { tokenSelectorSlice, externalDataSlice } = useSelector(state => state);
@@ -21,7 +20,6 @@ const SelectTokenModal = () => {
         ...externalDataSlice.tokenList 
     ];
     const [shownTokens, setShownTokens ] = useState(fullTokenList);
-
     return (
         <>
             <button className="big-button" onClick={onOpenModal}>
@@ -84,25 +82,5 @@ const SelectTokenModal = () => {
         </>
     )
 };
-
-const loadTokenByContractAddress = async (address) => {
-    let web3 = await getWeb3();
-    let abi = await getErc20Abi();
-
-    let contract = new web3.eth.Contract(abi, address);
-
-    let name = await contract.methods.name().call();
-    let totalSupply = await contract.methods.totalSupply().call();
-    let decimals = await contract.methods.decimals().call();
-    let ticker = await contract.methods.symbol().call();
-
-    return {
-        name,
-        totalSupply,
-        address,
-        decimals,
-        ticker
-    }
-}
 
 export default SelectTokenModal;

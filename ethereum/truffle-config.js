@@ -3,7 +3,9 @@ const mnemonic = require("./private.json").mnemonic;
 const endpoints = require("./private.json").endpoints;
 
 module.exports = {
-    //contracts_build_directory: "../webapp/public",
+    //uncomment this for building and moving binaries to /webapp/public
+    //tests aren't work for some reason with this param
+    contracts_build_directory: "../webapp/public/contracts/",
     networks: {
         dev: {
             host: "127.0.0.1",

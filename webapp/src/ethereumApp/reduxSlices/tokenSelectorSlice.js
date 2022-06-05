@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { getErc20Abi, getLockerContract } from '../helpers';
+import { erc20Abi } from '../constants';
+import { getLockerContract } from '../helpers';
 import { getWeb3 } from '../web3provider';
 import { getUserLocks } from './userLocksSlice';
 
@@ -18,7 +19,7 @@ export const approveToken = createAsyncThunk(
         try {
             let web3 = await getWeb3();
             let locker = await getLockerContract();
-            let tokenContract = new web3.eth.Contract(await getErc20Abi(), tokenAddress);
+            let tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
 
             await tokenContract
                 .methods
@@ -77,7 +78,7 @@ export const getSelectedTokenBalance = createAsyncThunk(
                 return balance.toString();
             }
             else {
-                let tokenContract = new web3.eth.Contract(await getErc20Abi(), tokenAddress);
+                let tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
                 let balance = await tokenContract.methods.balanceOf(userAddress).call();
                 return balance;
             }
@@ -91,7 +92,7 @@ export const getSelectedTokenApproval = createAsyncThunk(
     async ({ spenderAddress, userAddress, selectedTokenAddress }) => {
         try {
             let web3 = await getWeb3();
-            let selectedTokenContract = new web3.eth.Contract(await getErc20Abi(), selectedTokenAddress);
+            let selectedTokenContract = new web3.eth.Contract(erc20Abi, selectedTokenAddress);
 
             let allowance = await selectedTokenContract
                 .methods
@@ -112,7 +113,7 @@ export const clearApproval = createAsyncThunk(
 
             let web3 = await getWeb3();
             let locker = await getLockerContract();
-            let tokenContract = new web3.eth.Contract(await getErc20Abi(), state.tokenSelectorSlice.selectedToken.address);
+            let tokenContract = new web3.eth.Contract(erc20Abi, state.tokenSelectorSlice.selectedToken.address);
             let totalSupply = state.tokenSelectorSlice.selectedToken.totalSupply;
 
             await tokenContract
@@ -136,7 +137,7 @@ export const selectToken = createAsyncThunk(
             return token;
         } else {
             try {
-                let selectedTokenContract = new web3.eth.Contract(await getErc20Abi(), token.address);
+                let selectedTokenContract = new web3.eth.Contract(erc20Abi, token.address);
 
                 let totalSupply = await selectedTokenContract
                     .methods

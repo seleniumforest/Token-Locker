@@ -1,13 +1,7 @@
 import Axios from 'axios';
-import { ETH_GANACHE, ETH_MAINNET, ETH_ROPSTEN } from "./constants";
-import Web3Utils from 'web3-utils';
+import { erc20Abi, ETH_GANACHE, ETH_MAINNET, ETH_ROPSTEN } from "./constants";
 import { getWeb3 } from './web3provider';
-
-let erc20Abi = "";
-
-export const checkNetwork = (networkId) =>
-(networkId === ETH_ROPSTEN ||
-    networkId === ETH_GANACHE);
+import big from 'big.js';
 
 export const shortAddress = (addr, start = 5, end = 2) =>
     `${addr.slice(0, start)}...${addr.slice(addr.length - end, addr.length)}`;
@@ -37,31 +31,37 @@ export const getLockerContract = async () => {
     }
 }
 
-export const getErc20Abi = async () => {
-    if (erc20Abi) return erc20Abi;
+export const fromBaseUnit = (amount, decimals = 18) => {
+    let demicrofied = big(amount.toString().replace(",", "."))
+        .div(Math.pow(10, decimals))
+        .toFixed();
 
-    let request = await Axios.get("/ERC20_abi.json");
-    erc20Abi = request.data;
-    return erc20Abi;
+    return typeof amount === "string" ? demicrofied.toString() : demicrofied;
 }
 
-export const toBigNumber = (number) => new Web3Utils.BN(number);
+export const toBaseUnit = (amount, decimals = 18) => {
+    let microfied = big(amount.toString().replace(",", "."))
+        .mul(Math.pow(10, decimals))
+        .toFixed();
 
-export const fromBaseUnit = (value, decimals = 18) => 
-    value ? Web3Utils.fromWei(value?.toString(), decimalToUnit(decimals)) : null; 
+    return typeof amount === "string" ? microfied.toString() : microfied;
+}
 
-export const toBaseUnit = (value, decimals = 18) => 
-    value ? Web3Utils.toWei(value?.toString(), decimalToUnit(decimals)) : null;
+export const loadTokenByContractAddress = async (address) => {
+    let web3 = await getWeb3();
 
-const decimalToUnit = (decimal) => {
-    switch (decimal) {
-        case 18: return 'ether';
-        case 15: return 'milliether';
-        case 12: return 'microether';
-        case 9: return 'gwei';
-        case 6: return 'mwei';
-        case 3: return 'kwei';
-        case 1: return 'wei';
-        default: return 'ether';
+    let contract = new web3.eth.Contract(erc20Abi, address);
+
+    let name = await contract.methods.name().call();
+    let totalSupply = await contract.methods.totalSupply().call();
+    let decimals = await contract.methods.decimals().call();
+    let ticker = await contract.methods.symbol().call();
+
+    return {
+        name,
+        totalSupply,
+        address,
+        decimals,
+        ticker
     }
 }
