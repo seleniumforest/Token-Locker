@@ -1,12 +1,14 @@
 import moment from "moment";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fromBaseUnit, shortAddress } from "../helpers";
+import Modal from "react-responsive-modal";
+import { fromBaseUnit, loadTokenByContractAddress, shortAddress } from "../helpers";
 import { claimByVaultId, getUserLocks } from "../reduxSlices/userLocksSlice";
 import LoadingSpinner from "./LoadingSpinner";
+import big from 'big.js';
 
 const UserLocks = () => {
-    const { userLocksSlice, networkSlice } = useSelector(state => state);
+    const { userLocksSlice, networkSlice, externalDataSlice } = useSelector(state => state);
     const dispatch = useDispatch();
 
     useEffect(() => {
@@ -25,50 +27,86 @@ const UserLocks = () => {
         <>
             <span className="lock-label last-label">Your locks</span>
             <div className="lock-block user-locks">
-                {userLocksSlice.userLocks.map((x, index) =>
-                    (<UserLock key={index} lock={x} index={index} />))}
+                {userLocksSlice.userLocks.map((lock, index) => {
+                    let amountToClaim = lock.checkpoints.reduce((acc, cp) => big(fromBaseUnit(cp.tokensCount)).plus(acc), 0);
+                    let tokenTicker = getTokenTickerByAddress(externalDataSlice.tokenList, lock.tokenAddress);
+                    let label = `${amountToClaim} ${lock.nativeCurrency ? externalDataSlice.nativeCurrency.ticker : tokenTicker}`;
+
+                    return (
+                        <div key={index} className="user-lock">
+                            <div className="userlock-label">
+                                {label}
+                            </div>
+                            <UserLockModal userLock={lock} index={index} />
+                        </div>
+                    )
+                })}
             </div>
         </>
     )
 }
 
-const UserLock = ({ lock, index }) => {
+const UserLockModal = ({ userLock, index }) => {
+    const [open, setOpen] = useState(false);
+    const onOpenModal = () => setOpen(true);
+    const onCloseModal = () => setOpen(false);
     const dispatch = useDispatch();
-    const externalDataSlice = useSelector(state => state.externalDataSlice);
 
-    let checkpoint = lock.checkpoints[0];
-    let vaultReleased = checkpoint.releaseTargetTimestamp <= moment().unix();
-    let amountToClaim = fromBaseUnit(checkpoint.tokensCount);
-    let untilDate = moment.unix(checkpoint.releaseTargetTimestamp).format("DD/MM/YY HH:mm");
-    let claimed = checkpoint.claimed;
-    let availableToClaim = vaultReleased && !claimed;
-    let btnclass = `big-button userlock-claim ${!availableToClaim && "disabled"}`;
-
-    let claimButton = (
-        <button
-            className={btnclass}
-            onClick={async () => {
-                if (!availableToClaim)
-                    return;
-
-                await dispatch(claimByVaultId({ vaultId: index.toString() }));
-            }}
-        >
-            {claimed ? "Claimed" : "Claim"}
-        </button >
-    );
-
-    let tokenTicker = getTokenTickerByAddress(externalDataSlice.tokenList, lock.tokenAddress);
-    let label = `${amountToClaim} ${lock.nativeCurrency ? externalDataSlice.nativeCurrency.ticker : tokenTicker} - until ${untilDate}`;
+    let checkpoints = userLock.checkpoints;
+    let checkpointsToClaim = checkpoints.filter(x => !x.claimed).map(x => x.id);
 
     return (
-        <div className="user-lock">
-            <div className="userlock-label">
-                {label}
-            </div>
-            {lock.loading ? <LoadingSpinner /> : claimButton}
-        </div>
-    )
+        <>
+            <button
+                className={"big-button"}
+                onClick={async () => {
+                    onOpenModal();
+                }}
+            >
+                {"Open"}
+            </button >
+            <Modal
+                open={open}
+                onClose={onCloseModal}
+                center
+                classNames={{
+                    overlay: 'custom-overlay',
+                    modal: 'custom-modal',
+                }}>
+                {checkpoints.map(cp => {
+                    return (<div key={cp.id} className="tokenlist-token">
+                        <label>{formatCheckpointLabel(cp, userLock.tokenInfo)}</label>
+                        <button className={`big-button ${cp.claimed ? "disabled" : ""}`} onClick={() => {
+                            if (cp.claimed)
+                                return;
+
+                            //TODO index != vaultId, fix in contract
+                            dispatch(claimByVaultId({ vaultId: index, checkpoints: [cp.id] }))
+                        }}>
+                            {`${cp.claimed ? "Claimed" : "Claim"}`}
+                        </button>
+                    </div>);
+                })}
+                <div className="tokenlist-token">
+                    <button className={`big-button ${checkpointsToClaim.length > 0 ? "" : "disabled"}`} onClick={async () => {
+                        dispatch(claimByVaultId({
+                            vaultId: index,
+                            checkpoints: checkpointsToClaim
+                        }))
+                    }}>
+                        {`${checkpointsToClaim.length > 0 ? "Claim all" : "Claimed"}`}
+                    </button>
+                </div>
+            </Modal>
+        </>);
+}
+
+const formatCheckpointLabel = (cp, tokenInfo) => {
+    let readableDate = moment.unix(cp.releaseTargetTimestamp).format('DD/MM/YY, h:mm:ss a');
+    let tokensCount = fromBaseUnit(cp.tokensCount, tokenInfo.decimals);
+    let tokenTicker = tokenInfo.ticker;
+
+    return `${tokensCount} ${tokenTicker} until ${readableDate}`;
 }
 
 const getTokenTickerByAddress = (tokenList, address) => {

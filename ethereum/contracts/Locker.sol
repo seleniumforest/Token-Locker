@@ -52,7 +52,7 @@ contract Locker {
         targetVault.nativeToken = false;
 
         uint256 totalTransfer = 0;
-        for (uint256 i; i < releaseCheckpoints.length; i++) {
+        for (uint256 i = 0; i < releaseCheckpoints.length; i++) {
             require(
                 releaseCheckpoints[i].releaseTargetTimestamp > block.timestamp,
                 "Date in the past selected"

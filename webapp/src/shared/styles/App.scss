@@ -63,8 +63,7 @@ body {
             }
             .lock-block {
                 margin-bottom: 10px;
-                width: 350px;
-                height: 70px;
+                width: 450px;
                 background-color: var(--colorShadeC);
                 border-radius: 1em;
                 display: flex;
@@ -75,6 +74,15 @@ body {
                 
                 .red-rdt > input {
                     border: 2px solid indianred;
+                }
+
+                &.release-checkpoints {
+                    flex-direction: column;
+
+                    > div {
+                        display: flex;
+                        align-items: center;
+                    }
                 }
 
                 &.user-locks {

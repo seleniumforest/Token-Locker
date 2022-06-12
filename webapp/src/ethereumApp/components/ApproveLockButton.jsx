@@ -16,16 +16,11 @@ const ApproveLockButton = () => {
             !selectedToken.address)
             return;
 
-        dispatch(getSelectedTokenApproval({
-            spenderAddress: externalDataSlice.locker.address,
-            userAddress: networkSlice.userAddress,
-            selectedTokenAddress: selectedToken.address
-        }));
+        dispatch(getSelectedTokenApproval());
 
     }, [
         networkSlice.userAddress,
         selectedToken.address,
-        externalDataSlice.locker.address,
         dispatch
     ])
 
@@ -45,9 +40,13 @@ const ApproveLockBtnForEth = () => {
     const dispatch = useDispatch();
 
     let balance = fromBaseUnit(tokenSelectorSlice.balance);
-    let valid = Number(tokenSelectorSlice.amount) > 0 &&
-        Number(tokenSelectorSlice.amount) <= Number(balance) &&
-        tokenSelectorSlice.lockUntil > moment().unix();
+    let totalAmount = tokenSelectorSlice.releaseCheckpoints.reduce((acc, rc) => Number(rc.tokensCount) + acc, 0);
+    let allAmountsFilled = tokenSelectorSlice.releaseCheckpoints.reduce((acc, rc) => acc && Number(rc.tokensCount) > 0, true);
+    let allDatesAreInFuture = tokenSelectorSlice.releaseCheckpoints.reduce((acc, rc) => acc && rc.releaseTargetTimestamp > moment().unix(), true);
+    let valid = Number(totalAmount) > 0 &&
+        Number(totalAmount) <= Number(balance) &&
+        allDatesAreInFuture &&
+        allAmountsFilled;
 
     let btnclass = `lock-button animated big-button ${!valid && "disabled"}`;
     let lockBtn = (<button
@@ -55,7 +54,7 @@ const ApproveLockBtnForEth = () => {
         onClick={() => {
             if (!valid)
                 return;
-            
+
             let selToken = tokenSelectorSlice.selectedToken;
 
             let action = lockToken({
@@ -80,51 +79,32 @@ const ApproveLockBtnForErc20 = () => {
 
     let selToken = tokenSelectorSlice.selectedToken;
     let balance = fromBaseUnit(tokenSelectorSlice.balance, selToken.decimals);
+    let totalAmount = tokenSelectorSlice.releaseCheckpoints.reduce((acc, rc) => Number(rc.tokensCount) + acc, 0);
+    let allDatesAreInFuture = tokenSelectorSlice.releaseCheckpoints.reduce((acc, rc) => acc && rc.releaseTargetTimestamp > moment().unix(), true);
+    let allAmountsFilled = tokenSelectorSlice.releaseCheckpoints.reduce((acc, rc) => acc && Number(rc.tokensCount) > 0, true);
     let valid = selToken.address &&
-        Number(tokenSelectorSlice.amount) > 0 &&
-        Number(tokenSelectorSlice.amount) <= Number(balance) &&
-        tokenSelectorSlice.lockUntil > moment().unix();
+        Number(totalAmount) > 0 &&
+        Number(totalAmount) <= Number(balance) &&
+        allDatesAreInFuture &&
+        allAmountsFilled;
 
-    let approved = Number(fromBaseUnit(tokenSelectorSlice.approvedAmount, selToken.decimals)) >= Number(tokenSelectorSlice.amount);
+    let approved = Number(fromBaseUnit(tokenSelectorSlice.approvedAmount, selToken.decimals)) >= Number(totalAmount);
     let btnclass = `lock-button animated big-button ${!valid && "disabled"}`;
 
-    if (approved)
-        return (<button
-            className={btnclass}
-            onClick={() => {
-                if (!valid)
-                    return;
+    return (<button
+        className={btnclass}
+        onClick={() => {
+            if (!valid)
+                return;
 
-                let action = lockToken({
-                    isNative: selToken.native,
-                    lockUntil: tokenSelectorSlice.lockUntil.toString(),
-                    amount: toBaseUnit(tokenSelectorSlice.amount, selToken.decimals),
-                    tokenAddress: selToken.address,
-                    userAddress: networkSlice.userAddress
-                });
+            let action = approved ?
+                lockToken() : 
+                approveToken();
 
-                dispatch(action);
-            }}>
-            Lock
-        </button>);
-
-    return (
-        <button
-            className={btnclass}
-            onClick={() => {
-                if (!valid)
-                    return;
-
-                let action = approveToken({
-                    tokenAddress: tokenSelectorSlice.selectedToken.address, 
-                    approveAmount: tokenSelectorSlice.selectedToken.totalSupply
-                });
-
-                dispatch(action);
-            }}>
-            Approve
-        </button>
-    );
+            dispatch(action);
+        }}>
+        {approved ? "Lock" : "Approve"}
+    </button>)
 }
 
 export default ApproveLockButton;

@@ -38,14 +38,14 @@ const TokenSelector = () => {
     return (
         <>
             <SelectTokenModal />
-            <input className="big-input"
+            {/* <input className="big-input"
                 onChange={(e) => {
                     let amount = e.target.value.replace(",", ".");
                     dispatch(setTokenAmount(amount));
                 }}
                 placeholder="Amount"
                 type="number"
-                value={tokenSelectorSlice.amount} />
+                value={tokenSelectorSlice.amount} /> */}
             {balanceLabel}
         </>
     );

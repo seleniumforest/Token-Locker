@@ -17,7 +17,7 @@ export const fetchExternalData = createAsyncThunk(
         let web3 = await getWeb3();
         let chainId = await web3.eth.getChainId();
         let list = await getEthTokenList(chainId);
-        let contract = await getLockerContract();
+        let contract = await getLockerContract(chainId);
         let nativeCurrency = await getNativeToken(chainId);
 
         return { 

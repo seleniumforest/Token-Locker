@@ -54,8 +54,8 @@ const App = () => {
                     <div className="lock-block swap-addresses-from">
                         <TokenSelector />
                     </div>
-                    <span className="lock-label">Select date to lock until</span>
-                    <div className="lock-block">
+                    <span className="lock-label">Release dates and amount to lock</span>
+                    <div className="lock-block release-checkpoints">
                         <DateSelector />
                     </div>
                     <ApproveLockButton />

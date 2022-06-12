@@ -1,8 +1,16 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { erc20Abi } from '../constants';
-import { getLockerContract } from '../helpers';
+import { getLockerContract, toBaseUnit } from '../helpers';
 import { getWeb3 } from '../web3provider';
 import { getUserLocks } from './userLocksSlice';
+import structuredClone from '@ungap/structured-clone';
+import big from 'big.js';
+
+const checkpointInitialState = {
+    id: 1,
+    tokensCount: 0,
+    releaseTargetTimestamp: 0
+};
 
 const initialState = {
     selectedToken: {},
@@ -10,15 +18,35 @@ const initialState = {
     amount: "0",
     balance: 0,
     lockUntil: 0,
-    isApproveLockLoading: false
+    isApproveLockLoading: false,
+    releaseCheckpoints: [{
+        ...checkpointInitialState
+    }]
 };
+
+export const addReleaseCheckpoint = createAsyncThunk(
+    'tokenSelector/addReleaseCheckpoint',
+    async (_, { getState }) => {
+        let state = getState();
+        return [
+            ...state.tokenSelectorSlice.releaseCheckpoints,
+            {
+                ...checkpointInitialState,
+                id: Math.max(...state.tokenSelectorSlice.releaseCheckpoints.map(x => x.id)) + 1
+            }
+        ]
+    }
+);
 
 export const approveToken = createAsyncThunk(
     'tokenSelector/approveToken',
-    async ({ tokenAddress, approveAmount }) => {
+    async (_, { getState }) => {
         try {
             let web3 = await getWeb3();
-            let locker = await getLockerContract();
+            let state = getState();
+            let locker = state.externalDataSlice.locker;
+            let tokenAddress = state.tokenSelectorSlice.selectedToken.address;
+            let approveAmount = state.tokenSelectorSlice.selectedToken.totalSupply;
             let tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
 
             await tokenContract
@@ -34,32 +62,38 @@ export const approveToken = createAsyncThunk(
 
 export const lockToken = createAsyncThunk(
     'tokenSelector/lockToken',
-    async ({ isNative, lockUntil, amount, tokenAddress, userAddress }, { dispatch }) => {
+    async (_, { dispatch, getState }) => {
         try {
-            let web3 = await getWeb3();
-            let locker = await getLockerContract();
+            let state = getState();
+            let web3 = getWeb3();
+            let locker = structuredClone(state.externalDataSlice.locker);
             let lockerContract = new web3.eth.Contract(locker.abi, locker.address);
+            let checkpoints = structuredClone(state.tokenSelectorSlice.releaseCheckpoints)
+                .map(cp => ({ ...cp, tokensCount: toBaseUnit(cp.tokensCount) }));
+            console.log(JSON.stringify(checkpoints))
+            let selectedToken = state.tokenSelectorSlice.selectedToken;
+            let userAddress = state.networkSlice.userAddress;
 
-            if (isNative) {
+            if (selectedToken.native) {
                 await lockerContract
                     .methods
-                    .lockNativeCurrency(lockUntil.toString())
+                    .lockNativeCurrency(checkpoints)
                     .send({
                         from: userAddress,
-                        value: amount
+                        value: checkpoints.reduce((acc, rc) => big(Number(rc.tokensCount)).plus(acc), 0)
                     })
             }
             else {
                 await lockerContract
                     .methods
-                    .lock(lockUntil.toString(), tokenAddress, amount)
-                    .send({ from: userAddress })
+                    .lockERC20(selectedToken.address, checkpoints)
+                    .send({ from: userAddress });
             }
             await dispatch(getUserLocks({ userAddress }))
             await dispatch(getSelectedTokenBalance({
-                tokenAddress,
+                tokenAddress: selectedToken.address,
                 userAddress,
-                isNativeCurrency: isNative
+                isNativeCurrency: selectedToken.native
             }))
             await dispatch(clearAmount())
         }
@@ -89,9 +123,14 @@ export const getSelectedTokenBalance = createAsyncThunk(
 
 export const getSelectedTokenApproval = createAsyncThunk(
     'tokenSelector/getSelectedTokenApproval',
-    async ({ spenderAddress, userAddress, selectedTokenAddress }) => {
+    async (_, { getState }) => {
         try {
+            let state = getState();
             let web3 = await getWeb3();
+
+            let userAddress = state.networkSlice.userAddress;
+            let spenderAddress = structuredClone(state.externalDataSlice.locker.address);
+            let selectedTokenAddress = state.tokenSelectorSlice.selectedToken.address;
             let selectedTokenContract = new web3.eth.Contract(erc20Abi, selectedTokenAddress);
 
             let allowance = await selectedTokenContract
@@ -130,28 +169,24 @@ export const clearApproval = createAsyncThunk(
 export const selectToken = createAsyncThunk(
     "tokenSelector/selectToken",
     async (token) => {
-
-        let web3 = await getWeb3();
-        
-        if (token.native || token.totalSupply) {
+        if (token.native || token.totalSupply)
             return token;
-        } else {
-            try {
-                let selectedTokenContract = new web3.eth.Contract(erc20Abi, token.address);
 
-                let totalSupply = await selectedTokenContract
-                    .methods
-                    .totalSupply()
-                    .call();
+        try {
+            let web3 = await getWeb3();
+            let selectedTokenContract = new web3.eth.Contract(erc20Abi, token.address);
 
-                return {
-                    ...token,
-                    totalSupply
-                }
+            let totalSupply = await selectedTokenContract
+                .methods
+                .totalSupply()
+                .call();
+
+            return {
+                ...token,
+                totalSupply
             }
-            catch (e) { console.log(e) }
         }
-
+        catch (e) { console.log(e) }
     }
 )
 
@@ -160,10 +195,14 @@ export const tokenSelectorSlice = createSlice({
     initialState,
     reducers: {
         setTokenAmount: (state, action) => {
-            state.amount = action.payload;
+            let { amount, id } = action.payload;
+            let index = state.releaseCheckpoints.findIndex(x => x.id === id);
+            state.releaseCheckpoints[index].tokensCount = amount;
         },
         setLockUntil: (state, action) => {
-            state.lockUntil = action.payload;
+            let { time, id } = action.payload;
+            let index = state.releaseCheckpoints.findIndex(x => x.id === id);
+            state.releaseCheckpoints[index].releaseTargetTimestamp = time;
         },
         clearAmount: (state) => {
             state.amount = 0;
@@ -198,6 +237,9 @@ export const tokenSelectorSlice = createSlice({
             })
             .addCase(selectToken.fulfilled, (state, action) => {
                 state.selectedToken = { ...action.payload }
+            })
+            .addCase(addReleaseCheckpoint.fulfilled, (state, action) => {
+                state.releaseCheckpoints = [...action.payload]
             });
     }
 });
