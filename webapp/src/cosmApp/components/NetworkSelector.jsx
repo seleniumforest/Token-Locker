@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { shortAddress } from '../helpers';
-import { Router, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { setAddress } from '../reduxSlices/networkSlice';
 import { ENV, JUNO_LOCAL_KEPLR_CONFIG } from '../constants';
 
@@ -10,14 +10,6 @@ function NetworkSelector() {
     const { networkSlice } = useSelector(state => state);
     const dispatch = useDispatch();
     const navigate = useNavigate();
-
-    useEffect(() => {
-        // if (networkSlice.userAddress)
-        //     return;
-
-        // if (connected)
-        //     dispatch(setAddress({ userAddress: addresses[0] }));
-    }, [networkSlice.userAddress, dispatch, setAddress])
 
     return (
         <>

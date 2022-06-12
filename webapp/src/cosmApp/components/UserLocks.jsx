@@ -6,9 +6,6 @@ import { claimByVaultId, getUserLocks } from "../reduxSlices/userLocksSlice";
 import LoadingSpinner from "./LoadingSpinner";
 import Big from 'big.js';
 import { ENV } from "../constants";
-import { SigningCosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { getSelectedTokenBalance } from "../reduxSlices/tokenSelectorSlice";
-import { GasPrice } from "@cosmjs/stargate";
 
 const UserLocks = () => {
     const { userLocksSlice, networkSlice } = useSelector(state => state);
@@ -39,9 +36,8 @@ const UserLocks = () => {
 
 const UserLock = ({ lock, index }) => {
     const dispatch = useDispatch();
-    const { externalDataSlice, networkSlice, tokenSelectorSlice } = useSelector(state => state);
+    const { externalDataSlice } = useSelector(state => state);
 
-    let token = tokenSelectorSlice.selectedToken;
     let checkpoint = lock.release_checkpoints[0];
     let vaultReleased = checkpoint.release_timestamp <= moment().unix();
     let amountToClaim = Big(checkpoint.tokens_count).div(Math.pow(10, 6));

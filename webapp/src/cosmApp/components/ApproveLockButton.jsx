@@ -1,13 +1,11 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingSpinner from './LoadingSpinner';
-import { getUserLocks } from '../reduxSlices/userLocksSlice';
-import { getSelectedTokenBalance, lockToken } from '../reduxSlices/tokenSelectorSlice';
+import { lockToken } from '../reduxSlices/tokenSelectorSlice';
 
 const ApproveLockButton = () => {
     const { tokenSelectorSlice, networkSlice } = useSelector(state => state);
     const dispatch = useDispatch();
-    const token = tokenSelectorSlice.selectedToken;
     
     if (!networkSlice.userAddress)
         return null;

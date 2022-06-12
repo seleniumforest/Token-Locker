@@ -6,7 +6,7 @@ import { approveToken, getSelectedTokenApproval, lockToken } from '../reduxSlice
 import LoadingSpinner from './LoadingSpinner';
 
 const ApproveLockButton = () => {
-    const { tokenSelectorSlice, externalDataSlice, networkSlice } = useSelector(state => state);
+    const { tokenSelectorSlice, networkSlice } = useSelector(state => state);
     const dispatch = useDispatch();
 
     const selectedToken = tokenSelectorSlice.selectedToken;
@@ -74,7 +74,7 @@ const ApproveLockBtnForEth = () => {
 }
 
 const ApproveLockBtnForErc20 = () => {
-    const { tokenSelectorSlice, networkSlice } = useSelector(state => state);
+    const { tokenSelectorSlice } = useSelector(state => state);
     const dispatch = useDispatch();
 
     let selToken = tokenSelectorSlice.selectedToken;

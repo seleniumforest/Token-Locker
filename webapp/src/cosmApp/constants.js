@@ -31,11 +31,11 @@ export const JUNO_LOCAL_KEPLR_CONFIG = {
     },
     bech32Config: {
         bech32PrefixAccAddr: "juno",
-        bech32PrefixAccPub: "juno" + "pub",
-        bech32PrefixValAddr: "juno" + "valoper",
-        bech32PrefixValPub: "juno" + "valoperpub",
-        bech32PrefixConsAddr: "juno" + "valcons",
-        bech32PrefixConsPub: "juno" + "valconspub",
+        bech32PrefixAccPub: "junopub",
+        bech32PrefixValAddr: "junovaloper",
+        bech32PrefixValPub: "junovaloperpub",
+        bech32PrefixConsAddr: "junovalcons",
+        bech32PrefixConsPub: "junovalconspub",
     },
     currencies: [
         {

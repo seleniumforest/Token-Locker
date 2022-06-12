@@ -2,9 +2,8 @@ import moment from "moment";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Modal from "react-responsive-modal";
-import { fromBaseUnit, loadTokenByContractAddress, shortAddress } from "../helpers";
+import { fromBaseUnit, shortAddress } from "../helpers";
 import { claimByVaultId, getUserLocks } from "../reduxSlices/userLocksSlice";
-import LoadingSpinner from "./LoadingSpinner";
 import big from 'big.js';
 
 const UserLocks = () => {
@@ -54,6 +53,9 @@ const UserLockModal = ({ userLock, index }) => {
 
     let checkpoints = userLock.checkpoints;
     let checkpointsToClaim = checkpoints.filter(x => !x.claimed).map(x => x.id);
+    let atLeastTwoClaimsPossible = checkpoints
+        .filter(x => !x.claimed && x.releaseTargetTimestamp <= moment().unix())
+        .length > 0;
 
     return (
         <>
@@ -74,10 +76,12 @@ const UserLockModal = ({ userLock, index }) => {
                     modal: 'custom-modal',
                 }}>
                 {checkpoints.map(cp => {
+                    let claimAvailable = cp.releaseTargetTimestamp <= moment().unix();
+
                     return (<div key={cp.id} className="tokenlist-token">
                         <label>{formatCheckpointLabel(cp, userLock.tokenInfo)}</label>
-                        <button className={`big-button ${cp.claimed ? "disabled" : ""}`} onClick={() => {
-                            if (cp.claimed)
+                        <button className={`big-button ${cp.claimed || !claimAvailable ? "disabled" : ""}`} onClick={() => {
+                            if (cp.claimed || !claimAvailable)
                                 return;
 
                             //TODO index != vaultId, fix in contract
@@ -87,16 +91,18 @@ const UserLockModal = ({ userLock, index }) => {
                         </button>
                     </div>);
                 })}
-                <div className="tokenlist-token">
-                    <button className={`big-button ${checkpointsToClaim.length > 0 ? "" : "disabled"}`} onClick={async () => {
-                        dispatch(claimByVaultId({
-                            vaultId: index,
-                            checkpoints: checkpointsToClaim
-                        }))
-                    }}>
-                        {`${checkpointsToClaim.length > 0 ? "Claim all" : "Claimed"}`}
-                    </button>
-                </div>
+                {atLeastTwoClaimsPossible &&
+                    <div className="tokenlist-token">
+                        <button className={`big-button ${checkpointsToClaim.length > 0 ? "" : "disabled"}`} onClick={async () => {
+                            dispatch(claimByVaultId({
+                                vaultId: index,
+                                checkpoints: checkpointsToClaim
+                            }))
+                        }}>
+                            Claim all
+                        </button>
+                    </div>
+                }
             </Modal>
         </>);
 }

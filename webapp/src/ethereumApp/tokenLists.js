@@ -1,5 +1,4 @@
-import { ENV, ETH_BSC, ETH_GANACHE, ETH_MAINNET, ETH_ROPSTEN } from "./constants";
-import { getWeb3 } from "./web3provider";
+import { ENV, ETH_GANACHE, ETH_MAINNET, ETH_ROPSTEN } from "./constants";
 import Axios from "axios";
 
 export const getEthTokenList = async (network) => {

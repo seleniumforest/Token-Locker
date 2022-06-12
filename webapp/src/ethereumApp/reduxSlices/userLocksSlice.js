@@ -1,6 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { getLockerContract, loadTokenByContractAddress } from '../helpers';
-import { getWeb3 } from '../web3provider';
+import { loadTokenByContractAddress } from '../helpers';
 import { getSelectedTokenBalance } from './tokenSelectorSlice';
 import structuredClone from '@ungap/structured-clone';
 
@@ -14,8 +13,7 @@ export const getUserLocks = createAsyncThunk(
         try {
             let state = getState();
             let locker = structuredClone(state.externalDataSlice.locker);
-            let web3 = getWeb3();
-            let contract = new web3.eth.Contract(locker.abi, locker.address);
+            let contract = new window.web3.eth.Contract(locker.abi, locker.address);
             let locks = await contract
                 .methods
                 .getUserVaults(userAddress)
@@ -44,10 +42,9 @@ export const claimByVaultId = createAsyncThunk(
     'userLocks/claimByVaultId',
     async ({ vaultId, checkpoints }, {getState , dispatch}) => {
         try {
-            let web3 = await getWeb3();
             let state = getState();
             let locker = structuredClone(state.externalDataSlice.locker);
-            let contract = new web3.eth.Contract(locker.abi, locker.address);
+            let contract = new window.web3.eth.Contract(locker.abi, locker.address);
 
             let result = await contract
                 .methods

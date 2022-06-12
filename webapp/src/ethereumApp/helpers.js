@@ -1,6 +1,5 @@
 import Axios from 'axios';
 import { DEFAULT_ADDRESS, ENV, erc20Abi, ETH_GANACHE, ETH_MAINNET, ETH_ROPSTEN } from "./constants";
-import { getWeb3 } from './web3provider';
 import big from 'big.js';
 
 export const shortAddress = (addr, start = 5, end = 2) =>
@@ -48,9 +47,7 @@ export const loadTokenByContractAddress = async (address) => {
     if (address === DEFAULT_ADDRESS) 
         return ENV.nativeToken;
 
-    let web3 = await getWeb3();
-
-    let contract = new web3.eth.Contract(erc20Abi, address);
+    let contract = new window.web3.eth.Contract(erc20Abi, address);
 
     let name = await contract.methods.name().call();
     let totalSupply = await contract.methods.totalSupply().call();

@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { erc20Abi } from '../constants';
 import { getLockerContract, toBaseUnit } from '../helpers';
-import { getWeb3 } from '../web3provider';
 import { getUserLocks } from './userLocksSlice';
 import structuredClone from '@ungap/structured-clone';
 import big from 'big.js';
@@ -42,12 +41,11 @@ export const approveToken = createAsyncThunk(
     'tokenSelector/approveToken',
     async (_, { getState }) => {
         try {
-            let web3 = await getWeb3();
             let state = getState();
             let locker = state.externalDataSlice.locker;
             let tokenAddress = state.tokenSelectorSlice.selectedToken.address;
             let approveAmount = state.tokenSelectorSlice.selectedToken.totalSupply;
-            let tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
+            let tokenContract = new window.web3.eth.Contract(erc20Abi, tokenAddress);
 
             await tokenContract
                 .methods
@@ -65,9 +63,8 @@ export const lockToken = createAsyncThunk(
     async (_, { dispatch, getState }) => {
         try {
             let state = getState();
-            let web3 = getWeb3();
             let locker = structuredClone(state.externalDataSlice.locker);
-            let lockerContract = new web3.eth.Contract(locker.abi, locker.address);
+            let lockerContract = new window.web3.eth.Contract(locker.abi, locker.address);
             let checkpoints = structuredClone(state.tokenSelectorSlice.releaseCheckpoints)
                 .map(cp => ({ ...cp, tokensCount: toBaseUnit(cp.tokensCount) }));
             console.log(JSON.stringify(checkpoints))
@@ -105,14 +102,12 @@ export const getSelectedTokenBalance = createAsyncThunk(
     'tokenSelector/getSelectedTokenBalance',
     async ({ tokenAddress, userAddress, isNativeCurrency }) => {
         try {
-            let web3 = await getWeb3();
-
             if (isNativeCurrency) {
-                let balance = await web3.eth.getBalance(userAddress);
+                let balance = await window.web3.eth.getBalance(userAddress);
                 return balance.toString();
             }
             else {
-                let tokenContract = new web3.eth.Contract(erc20Abi, tokenAddress);
+                let tokenContract = new window.web3.eth.Contract(erc20Abi, tokenAddress);
                 let balance = await tokenContract.methods.balanceOf(userAddress).call();
                 return balance;
             }
@@ -126,12 +121,10 @@ export const getSelectedTokenApproval = createAsyncThunk(
     async (_, { getState }) => {
         try {
             let state = getState();
-            let web3 = await getWeb3();
-
             let userAddress = state.networkSlice.userAddress;
             let spenderAddress = structuredClone(state.externalDataSlice.locker.address);
             let selectedTokenAddress = state.tokenSelectorSlice.selectedToken.address;
-            let selectedTokenContract = new web3.eth.Contract(erc20Abi, selectedTokenAddress);
+            let selectedTokenContract = new window.web3.eth.Contract(erc20Abi, selectedTokenAddress);
 
             let allowance = await selectedTokenContract
                 .methods
@@ -149,10 +142,8 @@ export const clearApproval = createAsyncThunk(
     async (_, thunkApi) => {
         try {
             let state = thunkApi.getState();
-
-            let web3 = await getWeb3();
             let locker = await getLockerContract();
-            let tokenContract = new web3.eth.Contract(erc20Abi, state.tokenSelectorSlice.selectedToken.address);
+            let tokenContract = new window.web3.eth.Contract(erc20Abi, state.tokenSelectorSlice.selectedToken.address);
             let totalSupply = state.tokenSelectorSlice.selectedToken.totalSupply;
 
             await tokenContract
@@ -173,8 +164,7 @@ export const selectToken = createAsyncThunk(
             return token;
 
         try {
-            let web3 = await getWeb3();
-            let selectedTokenContract = new web3.eth.Contract(erc20Abi, token.address);
+            let selectedTokenContract = new window.web3.eth.Contract(erc20Abi, token.address);
 
             let totalSupply = await selectedTokenContract
                 .methods

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fromBaseUnit } from '../helpers';
-import { getSelectedTokenBalance, selectToken, setTokenAmount } from '../reduxSlices/tokenSelectorSlice';
+import { getSelectedTokenBalance, selectToken } from '../reduxSlices/tokenSelectorSlice';
 import SelectTokenModal from './SelectTokenModal';
 
 const TokenSelector = () => {

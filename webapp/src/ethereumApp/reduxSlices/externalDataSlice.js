@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import Web3 from 'web3';
 import { getLockerContract } from '../helpers';
 import { getEthTokenList, getNativeToken } from '../tokenLists';
-import { getWeb3 } from '../web3provider';
 
 const initialState = {
     externalDataLoaded: false,
@@ -14,8 +14,8 @@ const initialState = {
 export const fetchExternalData = createAsyncThunk(
     'externalData/fetchExternalData',
     async () => {
-        let web3 = await getWeb3();
-        let chainId = await web3.eth.getChainId();
+        window.web3 = new Web3(window.ethereum);
+        let chainId = await window.web3.eth.getChainId();
         let list = await getEthTokenList(chainId);
         let contract = await getLockerContract(chainId);
         let nativeCurrency = await getNativeToken(chainId);

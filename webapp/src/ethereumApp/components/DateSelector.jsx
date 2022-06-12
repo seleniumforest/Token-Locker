@@ -4,7 +4,6 @@ import "react-datetime/css/react-datetime.css";
 import moment from "moment";
 import { useDispatch, useSelector } from 'react-redux';
 import { addReleaseCheckpoint, setLockUntil, setTokenAmount } from '../reduxSlices/tokenSelectorSlice';
-import big from 'big.js';
 
 const DateSelector = () => {
     const { tokenSelectorSlice } = useSelector(state => state);
@@ -32,12 +31,8 @@ const DateSelector = () => {
 }
 
 const ReleaseCheckpoint = ({ checkpointData }) => {
-    const { tokenSelectorSlice, networkSlice } = useSelector(state => state);
+    const { networkSlice } = useSelector(state => state);
     const dispatch = useDispatch();
-
-    // let totalLock = tokenSelectorSlice
-    //     .releaseCheckpoints
-    //     .reduce((acc, cp) => cp.tokensCount + acc, 0);
 
     let dateInvalid = checkpointData.releaseTargetTimestamp < moment().unix() &&
         networkSlice.userAddress;
