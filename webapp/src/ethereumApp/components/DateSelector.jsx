@@ -3,7 +3,8 @@ import Datetime from 'react-datetime';
 import "react-datetime/css/react-datetime.css";
 import moment from "moment";
 import { useDispatch, useSelector } from 'react-redux';
-import { addReleaseCheckpoint, setLockUntil, setTokenAmount } from '../reduxSlices/tokenSelectorSlice';
+import { addReleaseCheckpoint } from '../reduxSlices/tokenSelectorSlice';
+import { useCheckpoint } from '../hooks/useCheckpoint';
 
 const DateSelector = () => {
     const { tokenSelectorSlice } = useSelector(state => state);
@@ -12,17 +13,17 @@ const DateSelector = () => {
     let releaseCheckpoints = tokenSelectorSlice.releaseCheckpoints;
     let lastCheckpointId = releaseCheckpoints[releaseCheckpoints.length - 1].id;
 
-    let btn = <button className='big-button' onClick={() => {
-        dispatch(addReleaseCheckpoint());
-    }}>+</button>
-
     return (
         <>
             {releaseCheckpoints.map(rc => {
                 return (
                     <Fragment key={rc.id}>
                         <ReleaseCheckpoint checkpointData={rc} />
-                        {rc.id === lastCheckpointId && btn}
+                        {rc.id === lastCheckpointId &&
+                            <button className='big-button' onClick={() => {
+                                dispatch(addReleaseCheckpoint());
+                            }}>Add checkpoint</button>
+                        }
                     </Fragment>
                 );
             })}
@@ -32,8 +33,10 @@ const DateSelector = () => {
 
 const ReleaseCheckpoint = ({ checkpointData }) => {
     const { networkSlice } = useSelector(state => state);
-    const dispatch = useDispatch();
-
+    const { 
+        setAmount,
+        setReleaseTimestamp
+    } = useCheckpoint(checkpointData.id);
     let dateInvalid = checkpointData.releaseTargetTimestamp < moment().unix() &&
         networkSlice.userAddress;
 
@@ -41,16 +44,10 @@ const ReleaseCheckpoint = ({ checkpointData }) => {
         <label>{checkpointData.id}</label>
         <Datetime
             isValidDate={current => (current.isAfter(moment().subtract(1, "day")))}
-            onChange={(e) => {
-                let time = e instanceof moment ? e.unix() : 0;
-                dispatch(setLockUntil({ time, id: checkpointData.id }));
-            }}
+            onChange={setReleaseTimestamp}
             className={dateInvalid ? "red-rdt" : ""} />
         <input className="big-input"
-            onChange={(e) => {
-                let amount = e.target.value.replace(",", ".");
-                dispatch(setTokenAmount({ amount, id: checkpointData.id }));
-            }}
+            onChange={setAmount}
             placeholder="Amount"
             type="number"
             value={checkpointData.tokensCount} />

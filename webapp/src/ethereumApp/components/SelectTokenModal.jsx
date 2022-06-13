@@ -9,11 +9,10 @@ import { useTokenFilter } from '../hooks/useTokenFilter';
 
 const SelectTokenModal = () => {
     const { tokenSelectorSlice } = useSelector(state => state);
-    const dispatch = useDispatch();
     const { filter, shownTokens } = useTokenFilter();
-
     const { open, onOpenModal, onCloseModal } = useModal();
-
+    const dispatch = useDispatch();
+    
     return (
         <>
             <button className="big-button" onClick={onOpenModal}>
