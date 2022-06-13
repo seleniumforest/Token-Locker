@@ -1,10 +1,11 @@
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Modal from "react-responsive-modal";
 import { fromBaseUnit, shortAddress } from "../helpers";
 import { claimByVaultId, getUserLocks } from "../reduxSlices/userLocksSlice";
 import big from 'big.js';
+import { useModal } from "../hooks/useModal";
 
 const UserLocks = () => {
     const { userLocksSlice, networkSlice, externalDataSlice } = useSelector(state => state);
@@ -46,9 +47,7 @@ const UserLocks = () => {
 }
 
 const UserLockModal = ({ userLock, index }) => {
-    const [open, setOpen] = useState(false);
-    const onOpenModal = () => setOpen(true);
-    const onCloseModal = () => setOpen(false);
+    const { open, onOpenModal, onCloseModal } = useModal();
     const dispatch = useDispatch();
 
     let checkpoints = userLock.checkpoints;

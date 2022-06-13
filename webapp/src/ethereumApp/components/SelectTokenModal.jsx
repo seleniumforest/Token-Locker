@@ -5,15 +5,13 @@ import '../../shared/styles/Modal.scss'
 import { useDispatch, useSelector } from 'react-redux';
 import { selectToken } from '../reduxSlices/tokenSelectorSlice';
 import { loadTokenByContractAddress } from '../helpers';
+import { useModal } from '../hooks/useModal';
 
 const SelectTokenModal = () => {
     const { tokenSelectorSlice, externalDataSlice } = useSelector(state => state);
     const dispatch = useDispatch();
-    
-    const [open, setOpen] = useState(false);
-    const onOpenModal = () => setOpen(true);
-    const onCloseModal = () => setOpen(false);
 
+    const { open, onOpenModal, onCloseModal } = useModal();
 
     const fullTokenList = [ 
         externalDataSlice.nativeCurrency, 
