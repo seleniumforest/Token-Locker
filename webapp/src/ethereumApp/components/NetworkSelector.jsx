@@ -1,12 +1,12 @@
 import React from 'react';
 import { shortAddress } from '../helpers';
-import { useSelector, useDispatch } from 'react-redux';
-import { connectToProvider, selectNetwork, setAddress } from '../reduxSlices/networkSlice';
+import { useSelector } from 'react-redux';
 import { ETH_BSC, ETH_GANACHE, ETH_ROPSTEN } from '../constants';
+import { useNetwork } from '../hooks/useNetwork';
 
 function NetworkSelector() {
     const { networkSlice, externalDataSlice } = useSelector(state => state);
-    const dispatch = useDispatch();
+    const { selectNetwork, connect, disconnect } = useNetwork("eth");
 
     return (
         <>
@@ -14,16 +14,12 @@ function NetworkSelector() {
                 <div className="tabs-switcher">
                     <button
                         className="tabs tabs-eth big-button animated shadow"
-                        onClick={() => dispatch(selectNetwork({ network: "eth" }))}>
+                        onClick={() => selectNetwork()}>
                         eth
                     </button>
                     <button
                         className="tabs tabs-connect animated big-button"
-                        onClick={() => {
-                            networkSlice.userAddress ?
-                                dispatch(setAddress("")) :
-                                dispatch(connectToProvider())
-                        }}>
+                        onClick={() => { networkSlice.userAddress ? disconnect() : connect() }}>
                         {getConnectButtonLabel(networkSlice, externalDataSlice)}
                     </button>
                 </div>

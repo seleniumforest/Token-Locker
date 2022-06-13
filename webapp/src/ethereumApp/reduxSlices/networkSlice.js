@@ -18,6 +18,7 @@ export const networkSlice = createSlice({
     initialState,
     reducers: {
         selectNetwork: (state, action) => {
+            debugger;
             state.network = action.payload.network;
         },
         setAddress: (state, action) => {
