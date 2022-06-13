@@ -10,7 +10,7 @@ export function useAppSettings() {
     const dispatch = useDispatch();
 
     const metamaskDetected = window?.ethereum?.isMetaMask;
-    const rightNetworkSeleted =
+    const rightNetworkSelected =
         externalDataSlice.chainId === ETH_ROPSTEN ||
         externalDataSlice.chainId === ETH_GANACHE;
     const externalDataLoaded = externalDataSlice.externalDataLoaded;
@@ -33,7 +33,7 @@ export function useAppSettings() {
 
     return {
         metamaskDetected,
-        rightNetworkSeleted,
+        rightNetworkSelected,
         externalDataLoaded
     }
 }

@@ -11,7 +11,7 @@ import { useAppSettings } from '../hooks/useAppSettings';
 const App = () => {
     const {
         metamaskDetected,
-        rightNetworkSeleted,
+        rightNetworkSelected,
         externalDataLoaded
     } = useAppSettings();
 
@@ -19,7 +19,7 @@ const App = () => {
     if (!metamaskDetected)
         return ("No metamask detected");
 
-    if (!rightNetworkSeleted)
+    if (!rightNetworkSelected)
         return ("Please switch network to Ropsten or Ganache");
 
     if (!externalDataLoaded)
