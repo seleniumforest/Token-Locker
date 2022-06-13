@@ -100,14 +100,17 @@ export const lockToken = createAsyncThunk(
 
 export const getSelectedTokenBalance = createAsyncThunk(
     'tokenSelector/getSelectedTokenBalance',
-    async ({ tokenAddress, userAddress, isNativeCurrency }) => {
+    async (_, { getState }) => {
         try {
-            if (isNativeCurrency) {
+            let state = getState();
+            let selectedToken = state.tokenSelectorSlice.selectedToken;
+            let userAddress = state.networkSlice.userAddress;
+
+            if (selectedToken.native) {
                 let balance = await window.web3.eth.getBalance(userAddress);
                 return balance.toString();
-            }
-            else {
-                let tokenContract = new window.web3.eth.Contract(erc20Abi, tokenAddress);
+            } else {
+                let tokenContract = new window.web3.eth.Contract(erc20Abi, selectedToken.address);
                 let balance = await tokenContract.methods.balanceOf(userAddress).call();
                 return balance;
             }
@@ -157,6 +160,7 @@ export const clearApproval = createAsyncThunk(
     }
 );
 
+//TODO refactor there's totalSupply fetch, not selection of the given token
 export const selectToken = createAsyncThunk(
     "tokenSelector/selectToken",
     async (token) => {

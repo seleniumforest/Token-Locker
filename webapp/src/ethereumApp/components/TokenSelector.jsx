@@ -22,31 +22,17 @@ const TokenSelector = () => {
         if (!networkSlice.userAddress)
             return;
 
-        dispatch(getSelectedTokenBalance({
-            tokenAddress: selectedToken.address,
-            userAddress: networkSlice.userAddress,
-            isNativeCurrency: selectedToken.native
-        }));
+        dispatch(getSelectedTokenBalance());
     }, [dispatch, networkSlice.userAddress, selectedToken.address, selectedToken.native])
-
-    let balanceLabel = tokenSelectorSlice.balance && networkSlice.userAddress ? (
-        <div className="token-user-balance">
-            balance: {fromBaseUnit(tokenSelectorSlice.balance, selectedToken.decimals)}
-        </div>
-    ) : null;
 
     return (
         <>
             <SelectTokenModal />
-            {/* <input className="big-input"
-                onChange={(e) => {
-                    let amount = e.target.value.replace(",", ".");
-                    dispatch(setTokenAmount(amount));
-                }}
-                placeholder="Amount"
-                type="number"
-                value={tokenSelectorSlice.amount} /> */}
-            {balanceLabel}
+            {!!tokenSelectorSlice.balance && networkSlice.userAddress &&
+                <div className="token-user-balance">
+                    balance: {fromBaseUnit(tokenSelectorSlice.balance, selectedToken.decimals)}
+                </div>
+            }
         </>
     );
 }

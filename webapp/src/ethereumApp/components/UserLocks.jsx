@@ -60,9 +60,7 @@ const UserLockModal = ({ userLock, index }) => {
         <>
             <button
                 className={"big-button"}
-                onClick={async () => {
-                    onOpenModal();
-                }}
+                onClick={onOpenModal}
             >
                 {"Open"}
             </button >

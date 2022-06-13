@@ -1,48 +1,28 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import "../../shared/styles/App.scss";
 import NetworkSelector from './NetworkSelector';
 import ApproveLockButton from './ApproveLockButton';
 import TokenSelector from './TokenSelector';
 import "react-datetime/css/react-datetime.css";
 import UserLocks from "./UserLocks"
-import { useDispatch, useSelector } from 'react-redux';
-import { fetchExternalData, setNetwork } from '../reduxSlices/externalDataSlice';
-import { ETH_BSC, ETH_GANACHE, ETH_ROPSTEN } from '../constants';
-import { setAddress } from '../reduxSlices/networkSlice';
-import Web3Utils from 'web3-utils';
 import DateSelector from './DateSelector';
+import { useAppSettings } from '../hooks/useAppSettings';
 
 const App = () => {
-    const { externalDataSlice } = useSelector(state => state);
-    const dispatch = useDispatch();
+    const {
+        metamaskDetected,
+        rightNetworkSeleted,
+        externalDataLoaded
+    } = useAppSettings();
 
-    const isMetaMask = window?.ethereum?.isMetaMask;
 
-    useEffect(() => {
-        if (externalDataSlice.externalDataLoaded || !isMetaMask)
-            return;
-
-        window.ethereum.on('accountsChanged', (accounts) => {
-            dispatch(setAddress({ userAddress: accounts[0] }));
-        });
-
-        window.ethereum.on('chainChanged', (chainId) => {
-            dispatch(setNetwork(Web3Utils.hexToNumber(chainId)));
-            dispatch(fetchExternalData());
-        });
-
-        dispatch(fetchExternalData());
-    }, [dispatch, externalDataSlice.externalDataLoaded, isMetaMask])
-
-    if (!isMetaMask)
+    if (!metamaskDetected)
         return ("No metamask detected");
 
-    if (externalDataSlice.chainId !== ETH_ROPSTEN && 
-        externalDataSlice.chainId !== ETH_GANACHE && 
-        externalDataSlice.chainId !== ETH_BSC)
-        return ("Please switch network to Ropsten");
+    if (!rightNetworkSeleted)
+        return ("Please switch network to Ropsten or Ganache");
 
-    if (!externalDataSlice.externalDataLoaded)
+    if (!externalDataLoaded)
         return ("Loading...");
 
     return (
