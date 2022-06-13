@@ -24,7 +24,7 @@ To deploy cosmwasm, see terra/juno docs and cosmwasm/environment/commands.txt
 
 - [done] ethereum contracts
 - [done] ethereum contracts tests
-- [part.done] ethereum webapp (need feature to add releasecheckpoints feature)
+- [done] ethereum webapp (need feature to add releasecheckpoints feature)
 - [part.done] token lists for eth blockchain
 - [wip] feature: create personal dashboard on /eth/{address}
 - [wip] feature: allow user to create vested vaults for another user
