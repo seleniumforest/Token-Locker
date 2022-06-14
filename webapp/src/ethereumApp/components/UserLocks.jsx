@@ -1,33 +1,26 @@
 import moment from "moment";
-import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Modal from "react-responsive-modal";
-import { fromBaseUnit, shortAddress } from "../helpers";
-import { claimByVaultId, getUserLocks } from "../reduxSlices/userLocksSlice";
+import { formatCheckpointLabel, fromBaseUnit, getTokenTickerByAddress } from "../helpers";
+import { claimByVaultId } from "../reduxSlices/userLocksSlice";
 import big from 'big.js';
 import { useModal } from "../hooks/useModal";
+import { useUserLocks } from "../hooks/useUserLocks";
 
 const UserLocks = () => {
-    const { userLocksSlice, networkSlice, externalDataSlice } = useSelector(state => state);
-    const dispatch = useDispatch();
+    const { networkSlice, externalDataSlice } = useSelector(state => state);
+    const userAddress = networkSlice.userAddress;
+    let { userLocks } = useUserLocks(userAddress);
 
-    useEffect(() => {
-        if (!networkSlice.userAddress)
-            return;
-
-        dispatch(getUserLocks({ userAddress: networkSlice.userAddress }));
-    }, [networkSlice.userAddress, dispatch])
-
-    let vaultsExist = userLocksSlice.userLocks?.length > 0;
-
-    if (!vaultsExist || !networkSlice.userAddress)
+    let vaultsExist = userLocks?.length > 0;
+    if (!vaultsExist || !userAddress)
         return (<span className="lock-label last-label"></span>)
 
     return (
         <>
             <span className="lock-label last-label">Your locks</span>
             <div className="lock-block user-locks">
-                {userLocksSlice.userLocks.map((lock, index) => {
+                {userLocks.map((lock, index) => {
                     let amountToClaim = lock.checkpoints.reduce((acc, cp) => big(fromBaseUnit(cp.tokensCount)).plus(acc), 0);
                     let tokenTicker = getTokenTickerByAddress(externalDataSlice.tokenList, lock.tokenAddress);
                     let label = `${amountToClaim} ${lock.nativeCurrency ? externalDataSlice.nativeCurrency.ticker : tokenTicker}`;
@@ -103,19 +96,5 @@ const UserLockModal = ({ userLock, index }) => {
             </Modal>
         </>);
 }
-
-const formatCheckpointLabel = (cp, tokenInfo) => {
-    let readableDate = moment.unix(cp.releaseTargetTimestamp).format('DD/MM/YY, h:mm:ss a');
-    let tokensCount = fromBaseUnit(cp.tokensCount, tokenInfo.decimals);
-    let tokenTicker = tokenInfo.ticker;
-
-    return `${tokensCount} ${tokenTicker} until ${readableDate}`;
-}
-
-const getTokenTickerByAddress = (tokenList, address) => {
-    let tokenTicker = tokenList.find(x => x.address.toLowerCase() === address.toLowerCase())?.ticker;
-
-    return tokenTicker || shortAddress(address);
-};
 
 export default UserLocks;

@@ -12,6 +12,7 @@ import {
     Route,
     useNavigate
 } from "react-router-dom";
+import { Dashboard } from './ethereumApp/components/Dashboard.jsx';
 
 const SelectNetwork = () => {
     const navigate = useNavigate();
@@ -38,6 +39,13 @@ ReactDOM.render(
                     <>
                         <Provider store={ethStore}>
                             <App />
+                        </Provider>
+                    </>
+                } />
+                <Route path="/dashboard/:address" element={
+                    <>
+                        <Provider store={ethStore}>
+                            <Dashboard />
                         </Provider>
                     </>
                 } />

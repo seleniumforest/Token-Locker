@@ -1,6 +1,7 @@
 import Axios from 'axios';
 import { DEFAULT_ADDRESS, ENV, erc20Abi, ETH_GANACHE, ETH_MAINNET, ETH_ROPSTEN } from "./constants";
 import big from 'big.js';
+import moment from 'moment';
 
 export const shortAddress = (addr, start = 5, end = 2) =>
     `${addr.slice(0, start)}...${addr.slice(addr.length - end, addr.length)}`;
@@ -61,4 +62,18 @@ export const loadTokenByContractAddress = async (address) => {
         decimals,
         ticker
     }
+}
+
+export const getTokenTickerByAddress = (tokenList, address) => {
+    let tokenTicker = tokenList.find(x => x.address.toLowerCase() === address.toLowerCase())?.ticker;
+
+    return tokenTicker || shortAddress(address);
+};
+
+export const formatCheckpointLabel = (cp, tokenInfo) => {
+    let readableDate = moment.unix(cp.releaseTargetTimestamp).format('DD/MM/YY, h:mm:ss a');
+    let tokensCount = fromBaseUnit(cp.tokensCount, tokenInfo.decimals);
+    let tokenTicker = tokenInfo.ticker;
+
+    return `${tokensCount} ${tokenTicker} until ${readableDate}`;
 }
